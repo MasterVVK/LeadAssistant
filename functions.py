@@ -5,7 +5,6 @@ from openai import OpenAI
 from prompts import assistant_instructions
 
 
-
 OPENAI_API_KEY = os.environ['OPENAI_API_KEY']
 
 # Инициализация клиента OpenAI
