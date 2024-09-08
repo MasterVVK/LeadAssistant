@@ -50,7 +50,7 @@
                 event.preventDefault(); // Предотвращаем стандартное поведение Enter
                 sendMessage();
             } else if (event.key === 'Enter' && event.shiftKey) {
-                event.preventDefault(); // Оставляем перевод строки
+                event.preventDefault(); // Добавляем перевод строки
                 userMessage.value += '\n';
             }
         });
@@ -61,12 +61,12 @@
         const maxHeight = 150; // Максимальная высота поля ввода
         userMessage.style.height = `${minHeight}px`; // Устанавливаем начальную высоту
 
-        // Проверка высоты контента и корректировка поля
+        // Обработчик ввода текста
         userMessage.addEventListener('input', function() {
             userMessage.style.height = `${minHeight}px`; // Сброс высоты перед изменением
-
-            // Проверка, достаточно ли текста для увеличения высоты
             const scrollHeight = userMessage.scrollHeight;
+
+            // Проверка на наличие текста для увеличения высоты
             if (scrollHeight > minHeight) {
                 userMessage.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
             }
@@ -79,7 +79,7 @@
 
             appendMessage('user', message); // Добавление сообщения пользователя
             document.getElementById('userMessage').value = ''; // Очистка поля
-            userMessage.style.height = `${minHeight}px`; // Сброс высоты после отправки сообщения
+            userMessage.style.height = `${minHeight}px`; // Сброс высоты после отправки
 
             try {
                 const response = await fetch('https://fd.vivikey.tech/chat', {
@@ -107,7 +107,7 @@
         }
     });
 
-    // Стили
+    // Стили для чата, адаптированные под бело-синий дизайн
     const style = document.createElement('style');
     style.textContent = `
         .chat-icon {
@@ -116,7 +116,7 @@
             right: 20px;
             width: 60px;
             height: 60px;
-            background-color: #4CAF50;
+            background-color: #008CFF; /* Синий цвет */
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -130,7 +130,7 @@
         }
 
         .chat-icon:hover {
-            background-color: #45a049;
+            background-color: #005F99; /* Более темный синий при наведении */
         }
 
         .chat-box {
@@ -139,12 +139,13 @@
             right: 20px;
             width: 350px;
             height: 500px;
-            background-color: #fff;
+            background-color: #fff; /* Белый фон */
             border-radius: 10px;
             display: none;
             flex-direction: column;
             z-index: 9999;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            font-family: 'Roboto', sans-serif;
         }
 
         .chat-box.show {
@@ -152,10 +153,11 @@
         }
 
         .chat-header {
-            background-color: #4CAF50;
+            background-color: #008CFF; /* Синий цвет заголовка */
             color: white;
             padding: 15px;
-            font-size: 16px;
+            font-size: 18px;
+            font-weight: bold;
             text-align: center;
             border-radius: 10px 10px 0 0;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -163,16 +165,17 @@
 
         .chat-messages {
             flex: 1;
-            padding: 10px;
+            padding: 15px;
             overflow-y: auto;
-            background-color: #f7f7f7;
+            background-color: #f9f9f9; /* Светлый фон сообщений */
             color: black;
+            font-size: 16px;
         }
 
         .chat-input-wrapper {
             display: flex;
             padding: 10px;
-            background-color: #fff;
+            background-color: #fff; /* Белый фон ввода */
             border-top: 1px solid #ddd;
             position: relative;
         }
@@ -184,19 +187,19 @@
             border-radius: 20px;
             resize: none;
             background-color: #f1f1f1;
-            font-size: 14px;
+            font-size: 16px;
             min-height: 36px;
             max-height: 150px;
-            overflow-y: hidden; /* Отключаем вертикальный скролл */
+            overflow-y: hidden;
             padding-right: 50px; /* Отступ для кнопки */
         }
 
         .chat-input-wrapper button {
             position: absolute;
-            right: 20px;
+            right: 10px;
             top: 50%;
             transform: translateY(-50%);
-            background-color: #4CAF50;
+            background-color: #008CFF; /* Синий цвет кнопки */
             border: none;
             border-radius: 50%;
             width: 36px;
@@ -205,21 +208,21 @@
             justify-content: center;
             align-items: center;
             color: white;
-            font-size: 16px;
+            font-size: 18px;
             cursor: pointer;
         }
 
         .chat-message {
             margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 10px;
+            padding: 12px;
+            border-radius: 8px;
             background-color: #e0e0e0;
             color: black;
             word-wrap: break-word;
         }
 
         .chat-message.user {
-            background-color: #4CAF50;
+            background-color: #008CFF; /* Синий цвет сообщений пользователя */
             color: white;
             text-align: right;
         }
