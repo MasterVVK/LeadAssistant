@@ -54,10 +54,18 @@
 
         // Динамическое изменение высоты поля ввода
         const userMessage = document.getElementById('userMessage');
+        let isFirstInput = true; // Флаг для отслеживания первого ввода
         userMessage.style.height = '36px'; // Устанавливаем минимальную высоту
+
         userMessage.addEventListener('input', function() {
-            userMessage.style.height = 'auto'; // Сбрасываем высоту перед вычислением новой
-            userMessage.style.height = (userMessage.scrollHeight) + 'px'; // Устанавливаем новую высоту
+            if (isFirstInput && userMessage.value.length > 0) {
+                isFirstInput = false; // Сбрасываем флаг после первого ввода
+            }
+
+            if (!isFirstInput) {
+                userMessage.style.height = 'auto'; // Сбрасываем высоту перед вычислением новой
+                userMessage.style.height = (userMessage.scrollHeight) + 'px'; // Устанавливаем новую высоту
+            }
         });
 
         // Функция отправки сообщения
@@ -68,6 +76,7 @@
             appendMessage('user', message); // Добавление сообщения пользователя
             document.getElementById('userMessage').value = ''; // Очистка поля
             document.getElementById('userMessage').style.height = '36px'; // Сброс высоты поля
+            isFirstInput = true; // Сбрасываем флаг для отслеживания ввода
 
             try {
                 const response = await fetch('https://fd.vivikey.tech/chat', {
