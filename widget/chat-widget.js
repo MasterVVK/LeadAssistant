@@ -45,10 +45,13 @@
         });
 
         // Обработчик клавиши Enter для отправки сообщения
-        document.getElementById('userMessage').addEventListener('keydown', function (event) {
+        document.getElementById('userMessage').addEventListener('keydown', function(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault(); // Предотвращаем стандартное поведение Enter
                 sendMessage();
+            } else if (event.key === 'Enter' && event.shiftKey) {
+                event.preventDefault(); // Оставляем перевод строки
+                userMessage.value += '\n';
             }
         });
 
