@@ -1,5 +1,7 @@
 (function() {
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM полностью загружен');
+
         // Добавляем стили для чата
         const style = document.createElement('style');
         style.textContent = `
@@ -70,18 +72,20 @@
             }
         `;
         document.head.appendChild(style);
+        console.log('Стили добавлены');
 
         // Создание иконки чата
         const chatIcon = document.createElement('div');
         chatIcon.classList.add('chat-icon');
         chatIcon.innerHTML = '💬';
         document.body.appendChild(chatIcon);
+        console.log('Иконка чата добавлена');
 
         // Создание окна чата
         const chatBox = document.createElement('div');
         chatBox.classList.add('chat-box');
         chatBox.innerHTML = `
-            <div class="chat-header">AI Chat Assistant3</div>
+            <div class="chat-header">AI Chat Assistant</div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input">
                 <input type="text" id="userMessage" placeholder="Введите сообщение...">
@@ -89,22 +93,30 @@
             </div>
         `;
         document.body.appendChild(chatBox);
+        console.log('Окно чата добавлено');
 
         // Обработчик клика для открытия и закрытия чата
         chatIcon.addEventListener('click', function() {
+            console.log('Клик по иконке чата');
             chatBox.style.display = chatBox.style.display === 'none' ? 'flex' : 'none';
+            console.log(`Окно чата теперь ${chatBox.style.display}`);
         });
 
         // Инициализация thread_id
         let thread_id = localStorage.getItem('thread_id');
+        console.log(`Инициализация thread_id: ${thread_id}`);
 
         // Функция для инициализации нового потока (если его нет)
         async function initThread() {
             if (!thread_id) {
+                console.log('Создание нового потока');
                 const response = await fetch('https://fd.vivikey.tech/start');
                 const data = await response.json();
                 thread_id = data.thread_id;
                 localStorage.setItem('thread_id', thread_id);
+                console.log(`Новый thread_id: ${thread_id}`);
+            } else {
+                console.log(`thread_id уже существует: ${thread_id}`);
             }
         }
 
@@ -119,6 +131,7 @@
             // Добавляем сообщение пользователя в чат
             appendMessage('Вы', message);
             document.getElementById('userMessage').value = '';
+            console.log(`Сообщение отправлено: ${message}`);
 
             try {
                 const response = await fetch('https://fd.vivikey.tech/chat', {
@@ -130,8 +143,10 @@
                 });
                 const data = await response.json();
                 appendMessage('Ассистент', data.response);
+                console.log(`Ответ ассистента: ${data.response}`);
             } catch (error) {
                 appendMessage('Ошибка', 'Произошла ошибка при отправке сообщения.');
+                console.error('Ошибка при отправке сообщения:', error);
             }
         });
 
@@ -142,6 +157,7 @@
             newMessage.textContent = `${sender}: ${message}`;
             messagesDiv.appendChild(newMessage);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            console.log(`Сообщение добавлено: ${sender}: ${message}`);
         }
     });
 })();
