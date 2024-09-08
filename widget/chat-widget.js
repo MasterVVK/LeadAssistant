@@ -142,11 +142,15 @@
             }
         });
 
-        // Функция для добавления сообщений в чат
+        // Функция для добавления сообщений в чат с поддержкой перевода строки
         function appendMessage(sender, message) {
             const messagesDiv = document.getElementById('chatMessages');
             const newMessage = document.createElement('div');
-            newMessage.textContent = `${sender}: ${message}`;
+
+            // Заменяем \n на <br> для поддержки перевода строки
+            const formattedMessage = message.replace(/\n/g, '<br>');
+            newMessage.innerHTML = `${sender}: ${formattedMessage}`;
+
             messagesDiv.appendChild(newMessage);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
