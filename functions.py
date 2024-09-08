@@ -12,7 +12,7 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Отправка данных о потенциальном клиенте в Make
 def create_lead(name, phone, date, service):
-    url = "Подставь свой адрес вебхука"
+    url = "https://hook.eu2.make.com/onszla435nbvwbuyhqjlrt1vos5ugw73"
     data = {
         "name": name,
         "phone": phone,

@@ -9,7 +9,6 @@ import functions
 # Проверка совместимости версии OpenAI
 from packaging import version
 
-
 OPENAI_API_KEY = os.environ['OPENAI_API_KEY']
 
 
