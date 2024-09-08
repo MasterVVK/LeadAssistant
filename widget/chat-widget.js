@@ -39,13 +39,13 @@
         // Инициализация потока
         setTimeout(initThread, 500);
 
-        // Добавление индикатора ожидания
+        // Добавление индикатора ожидания с анимацией
         function showLoadingIndicator() {
             const messagesDiv = document.getElementById('chatMessages');
             const loadingIndicator = document.createElement('div');
             loadingIndicator.id = 'loadingIndicator';
-            loadingIndicator.classList.add('chat-message', 'assistant');
-            loadingIndicator.innerHTML = '...';  // Индикатор ожидания
+            loadingIndicator.classList.add('chat-message', 'assistant', 'loading-animation');
+            loadingIndicator.innerHTML = `<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>`;
             messagesDiv.appendChild(loadingIndicator);
             messagesDiv.scrollTop = messagesDiv.scrollHeight; // Прокрутка вниз
         }
@@ -264,6 +264,26 @@
         #loadingIndicator {
             color: gray;
             font-style: italic;
+            display: flex;
+            align-items: center;
+        }
+
+        .loading-animation .dot {
+            animation: blink 1s infinite;
+        }
+
+        .loading-animation .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-animation .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes blink {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
         }
     `;
     document.head.appendChild(style);
