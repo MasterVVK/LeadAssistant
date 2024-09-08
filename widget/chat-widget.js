@@ -1,4 +1,5 @@
 (function() {
+    // Добавляем стили для чата
     const style = document.createElement('style');
     style.textContent = `
         .chat-icon {
@@ -16,6 +17,7 @@
             color: white;
             font-size: 30px;
             z-index: 9999;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
         .chat-box {
             position: fixed;
@@ -26,7 +28,7 @@
             background-color: white;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
-            display: none;
+            display: none; /* Скрыть чат по умолчанию */
             flex-direction: column;
             z-index: 9999;
         }
@@ -60,15 +62,21 @@
             border: none;
             border-radius: 5px;
             margin-left: 10px;
+            cursor: pointer;
+        }
+        .chat-input button:hover {
+            background-color: #4cae4c;
         }
     `;
     document.head.appendChild(style);
 
+    // Создание иконки чата
     const chatIcon = document.createElement('div');
     chatIcon.classList.add('chat-icon');
     chatIcon.innerHTML = '💬';
     document.body.appendChild(chatIcon);
 
+    // Создание окна чата
     const chatBox = document.createElement('div');
     chatBox.classList.add('chat-box');
     chatBox.innerHTML = `
@@ -81,23 +89,33 @@
     `;
     document.body.appendChild(chatBox);
 
+    // Обработчик клика для открытия и закрытия чата
     chatIcon.addEventListener('click', function() {
         chatBox.style.display = chatBox.style.display === 'none' ? 'flex' : 'none';
     });
 
+    // Инициализация thread_id
     let thread_id = localStorage.getItem('thread_id');
 
-    function appendMessage(sender, message) {
-        const messagesDiv = document.getElementById('chatMessages');
-        const newMessage = document.createElement('div');
-        newMessage.textContent = `${sender}: ${message}`;
-        messagesDiv.appendChild(newMessage);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    // Функция для инициализации нового потока (если его нет)
+    async function initThread() {
+        if (!thread_id) {
+            const response = await fetch('https://fd.vivikey.tech/start');
+            const data = await response.json();
+            thread_id = data.thread_id;
+            localStorage.setItem('thread_id', thread_id);
+        }
     }
 
+    // Инициализация потока при загрузке
+    initThread();
+
+    // Функция для отправки сообщений на сервер
     document.getElementById('sendMessage').addEventListener('click', async function() {
         const message = document.getElementById('userMessage').value.trim();
         if (message === '') return;
+
+        // Добавляем сообщение пользователя в чат
         appendMessage('Вы', message);
         document.getElementById('userMessage').value = '';
 
@@ -116,12 +134,12 @@
         }
     });
 
-    window.onload = async function() {
-        if (!thread_id) {
-            const response = await fetch('https://fd.vivikey.tech/start');
-            const data = await response.json();
-            thread_id = data.thread_id;
-            localStorage.setItem('thread_id', thread_id);
-        }
-    };
+    // Функция для добавления сообщений в чат
+    function appendMessage(sender, message) {
+        const messagesDiv = document.getElementById('chatMessages');
+        const newMessage = document.createElement('div');
+        newMessage.textContent = `${sender}: ${message}`;
+        messagesDiv.appendChild(newMessage);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
 })();
