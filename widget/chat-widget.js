@@ -59,10 +59,17 @@
         const userMessage = document.getElementById('userMessage');
         const minHeight = 36; // Минимальная высота поля ввода (одна строка)
         const maxHeight = 150; // Максимальная высота поля ввода
+        let firstInput = true; // Флаг для отслеживания первого ввода
         userMessage.style.height = `${minHeight}px`; // Устанавливаем начальную высоту
 
         // Обработчик ввода текста
         userMessage.addEventListener('input', function() {
+            // Если это первый ввод, не увеличиваем высоту
+            if (firstInput) {
+                firstInput = false; // Отключаем флаг после первого ввода
+                return; // Не изменяем высоту поля
+            }
+
             userMessage.style.height = `${minHeight}px`; // Сброс высоты перед изменением
             const scrollHeight = userMessage.scrollHeight;
 
@@ -80,6 +87,7 @@
             appendMessage('user', message); // Добавление сообщения пользователя
             document.getElementById('userMessage').value = ''; // Очистка поля
             userMessage.style.height = `${minHeight}px`; // Сброс высоты после отправки
+            firstInput = true; // Сбрасываем флаг после отправки сообщения
 
             try {
                 const response = await fetch('https://fd.vivikey.tech/chat', {
