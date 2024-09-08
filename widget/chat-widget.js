@@ -13,7 +13,7 @@
             <div class="chat-header">AI Chat Assistant</div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input-wrapper">
-                <textarea id="userMessage" placeholder="Введите сообщение..." rows="1"></textarea>
+                <textarea id="userMessage" placeholder="Введите сообщение..." rows="1" style="height: 36px; overflow-y: hidden;"></textarea>
                 <button id="sendMessage"><i class="send-icon">➤</i></button>
             </div>
         `;
@@ -54,17 +54,18 @@
 
         // Динамическое изменение высоты поля ввода
         const userMessage = document.getElementById('userMessage');
-        let isFirstInput = true; // Флаг для отслеживания первого ввода
-        userMessage.style.height = '36px'; // Устанавливаем минимальную высоту
+        const minHeight = 36; // Минимальная высота поля ввода (одна строка)
+        const maxHeight = 150; // Максимальная высота поля ввода
+        userMessage.style.height = `${minHeight}px`; // Изначально устанавливаем высоту в 36px
 
         userMessage.addEventListener('input', function() {
-            if (isFirstInput && userMessage.value.length > 0) {
-                isFirstInput = false; // Сбрасываем флаг после первого ввода
-            }
+            // Сбрасываем высоту для корректного вычисления
+            userMessage.style.height = `${minHeight}px`;
 
-            if (!isFirstInput) {
-                userMessage.style.height = 'auto'; // Сбрасываем высоту перед вычислением новой
-                userMessage.style.height = (userMessage.scrollHeight) + 'px'; // Устанавливаем новую высоту
+            // Проверяем высоту контента и изменяем высоту поля ввода
+            if (userMessage.scrollHeight > minHeight) {
+                const newHeight = Math.min(userMessage.scrollHeight, maxHeight);
+                userMessage.style.height = `${newHeight}px`;
             }
         });
 
@@ -75,8 +76,7 @@
 
             appendMessage('user', message); // Добавление сообщения пользователя
             document.getElementById('userMessage').value = ''; // Очистка поля
-            document.getElementById('userMessage').style.height = '36px'; // Сброс высоты поля
-            isFirstInput = true; // Сбрасываем флаг для отслеживания ввода
+            document.getElementById('userMessage').style.height = `${minHeight}px`; // Сброс высоты поля
 
             try {
                 const response = await fetch('https://fd.vivikey.tech/chat', {
@@ -184,7 +184,7 @@
             font-size: 14px;
             min-height: 36px;
             max-height: 150px;
-            overflow-y: auto;
+            overflow-y: hidden; /* Отключаем вертикальный скролл */
             padding-right: 50px; /* Отступ для кнопки */
         }
 
