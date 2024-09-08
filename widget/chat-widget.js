@@ -35,6 +35,9 @@
                 flex-direction: column;
                 z-index: 9999;
             }
+            .chat-box.show {
+                display: flex; /* Показать чат */
+            }
             .chat-header {
                 background-color: #5cb85c;
                 color: white;
@@ -98,8 +101,13 @@
         // Обработчик клика для открытия и закрытия чата
         chatIcon.addEventListener('click', function() {
             console.log('Клик по иконке чата');
-            chatBox.style.display = chatBox.style.display === 'none' ? 'flex' : 'none';
-            console.log(`Окно чата теперь ${chatBox.style.display}`);
+            if (chatBox.classList.contains('show')) {
+                chatBox.classList.remove('show');
+                console.log('Окно чата закрыто');
+            } else {
+                chatBox.classList.add('show');
+                console.log('Окно чата открыто');
+            }
         });
 
         // Инициализация thread_id
