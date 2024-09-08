@@ -56,16 +56,16 @@
         const userMessage = document.getElementById('userMessage');
         const minHeight = 36; // Минимальная высота поля ввода (одна строка)
         const maxHeight = 150; // Максимальная высота поля ввода
-        userMessage.style.height = `${minHeight}px`; // Изначально устанавливаем высоту в 36px
+        userMessage.style.height = `${minHeight}px`; // Устанавливаем начальную высоту
 
+        // Проверка высоты контента и корректировка поля
         userMessage.addEventListener('input', function() {
-            // Сбрасываем высоту для корректного вычисления
-            userMessage.style.height = `${minHeight}px`;
+            userMessage.style.height = `${minHeight}px`; // Сброс высоты перед изменением
 
-            // Проверяем высоту контента и изменяем высоту поля ввода
-            if (userMessage.scrollHeight > minHeight) {
-                const newHeight = Math.min(userMessage.scrollHeight, maxHeight);
-                userMessage.style.height = `${newHeight}px`;
+            // Проверка, достаточно ли текста для увеличения высоты
+            const scrollHeight = userMessage.scrollHeight;
+            if (scrollHeight > minHeight) {
+                userMessage.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
             }
         });
 
@@ -76,7 +76,7 @@
 
             appendMessage('user', message); // Добавление сообщения пользователя
             document.getElementById('userMessage').value = ''; // Очистка поля
-            document.getElementById('userMessage').style.height = `${minHeight}px`; // Сброс высоты поля
+            userMessage.style.height = `${minHeight}px`; // Сброс высоты после отправки сообщения
 
             try {
                 const response = await fetch('https://fd.vivikey.tech/chat', {
