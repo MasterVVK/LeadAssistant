@@ -62,12 +62,12 @@
         userMessage.style.height = `${minHeight}px`; // Устанавливаем начальную высоту
 
         userMessage.addEventListener('input', function() {
-            // Сохраняем текущую высоту поля ввода
-            let currentHeight = userMessage.offsetHeight;
+            // Сброс высоты перед изменением для того, чтобы текстовое поле уменьшалось при удалении текста
+            userMessage.style.height = `${minHeight}px`;
             const scrollHeight = userMessage.scrollHeight;
 
-            // Изменяем высоту только при необходимости
-            if (scrollHeight > currentHeight) {
+            // Изменяем высоту поля ввода в зависимости от его содержимого
+            if (scrollHeight > minHeight) {
                 userMessage.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
             }
         });
