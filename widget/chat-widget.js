@@ -111,8 +111,12 @@
                     body: JSON.stringify({ message, thread_id }),
                 });
                 const data = await response.json();
+
+                // Убираем ссылки в сообщении ИИ
+                let assistantMessage = data.response.replace(/\【.*?\】/g, '');
+
                 hideLoadingIndicator(); // Убираем индикатор после получения ответа
-                appendMessage('assistant', data.response); // Ответ ассистента
+                appendMessage('assistant', assistantMessage); // Ответ ассистента
             } catch (error) {
                 hideLoadingIndicator(); // Убираем индикатор ожидания при ошибке
                 appendMessage('assistant', 'Ошибка при отправке сообщения.');
