@@ -68,7 +68,7 @@
 
             // Изменяем высоту поля ввода в зависимости от его содержимого
             if (scrollHeight > minHeight) {
-                userMessage.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+                userMessage.style.height = `${Math.min(scrollHeight, maxHeight) - 2}px`; // Уменьшаем высоту на 2px для устранения пустой строки
             }
         });
 
