@@ -13,7 +13,7 @@
             <div class="chat-header">AI Chat Assistant</div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input-wrapper">
-                <textarea id="userMessage" placeholder="Введите сообщение..." rows="1" style="height: 36px; overflow-y: hidden; padding: 8px; padding-right: 60px;"></textarea>
+                <textarea id="userMessage" placeholder="Введите сообщение..." rows="1" style="height: 36px; overflow-y: hidden; padding: 8px; padding-right: 70px;"></textarea>
                 <button id="sendMessage"><i class="send-icon">➤</i></button>
             </div>
         `;
@@ -39,6 +39,25 @@
         // Инициализация потока
         setTimeout(initThread, 500);
 
+        // Добавление индикатора ожидания
+        function showLoadingIndicator() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.id = 'loadingIndicator';
+            loadingIndicator.classList.add('chat-message', 'assistant');
+            loadingIndicator.innerHTML = '...';  // Индикатор ожидания
+            messagesDiv.appendChild(loadingIndicator);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Прокрутка вниз
+        }
+
+        // Удаление индикатора ожидания
+        function hideLoadingIndicator() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.remove();
+            }
+        }
+
         // Отправка сообщения
         document.getElementById('sendMessage').addEventListener('click', async function () {
             sendMessage();
@@ -50,7 +69,7 @@
                 event.preventDefault(); // Предотвращаем стандартное поведение Enter
                 sendMessage();
             } else if (event.key === 'Enter' && event.shiftKey) {
-                event.prevent.preventDefault(); // Добавляем перевод строки
+                event.preventDefault(); // Добавляем перевод строки
                 userMessage.value += '\n';
             }
         });
@@ -81,6 +100,8 @@
             document.getElementById('userMessage').value = ''; // Очистка поля
             userMessage.style.height = `${minHeight}px`; // Сброс высоты после отправки
 
+            showLoadingIndicator(); // Показываем индикатор ожидания
+
             try {
                 const response = await fetch('https://fd.vivikey.tech/chat', {
                     method: 'POST',
@@ -90,8 +111,10 @@
                     body: JSON.stringify({ message, thread_id }),
                 });
                 const data = await response.json();
+                hideLoadingIndicator(); // Убираем индикатор после получения ответа
                 appendMessage('assistant', data.response); // Ответ ассистента
             } catch (error) {
+                hideLoadingIndicator(); // Убираем индикатор ожидания при ошибке
                 appendMessage('assistant', 'Ошибка при отправке сообщения.');
             }
         }
@@ -182,16 +205,16 @@
 
         .chat-input-wrapper textarea {
             flex: 1;
-            padding: 8px; /* Добавлено больше отступов */
+            padding: 8px;
             border: 1px solid #ccc;
-            border-radius: 10px; /* Уменьшено скругление */
+            border-radius: 10px;
             resize: none;
             background-color: #f1f1f1;
             font-size: 16px;
             min-height: 36px;
             max-height: 150px;
             overflow-y: hidden;
-            padding-right: 70px; /* Отступ для кнопки */
+            padding-right: 70px;
         }
 
         .chat-input-wrapper button {
@@ -213,7 +236,7 @@
         }
 
         .send-icon {
-            font-size: 18px; /* Уменьшаем размер иконки */
+            font-size: 18px;
             line-height: 18px;
         }
 
@@ -236,6 +259,11 @@
             background-color: #f5f5f5;
             color: black;
             text-align: left;
+        }
+
+        #loadingIndicator {
+            color: gray;
+            font-style: italic;
         }
     `;
     document.head.appendChild(style);
