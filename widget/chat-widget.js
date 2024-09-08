@@ -12,9 +12,9 @@
         chatBox.innerHTML = `
             <div class="chat-header">AI Chat Assistant</div>
             <div class="chat-messages" id="chatMessages"></div>
-            <div class="chat-input">
+            <div class="chat-input-wrapper">
                 <textarea id="userMessage" placeholder="Введите сообщение..." rows="1"></textarea>
-                <button id="sendMessage">Отправить</button>
+                <button id="sendMessage"><i class="send-icon">➤</i></button>
             </div>
         `;
         document.body.appendChild(chatBox);
@@ -52,6 +52,13 @@
             }
         });
 
+        // Динамическое изменение высоты поля ввода
+        const userMessage = document.getElementById('userMessage');
+        userMessage.addEventListener('input', function() {
+            userMessage.style.height = 'auto';
+            userMessage.style.height = (userMessage.scrollHeight) + 'px';
+        });
+
         // Функция отправки сообщения
         async function sendMessage() {
             const message = document.getElementById('userMessage').value.trim();
@@ -59,6 +66,7 @@
 
             appendMessage('user', message); // Добавление сообщения пользователя
             document.getElementById('userMessage').value = ''; // Очистка поля
+            document.getElementById('userMessage').style.height = 'auto'; // Сброс высоты поля
 
             try {
                 const response = await fetch('https://fd.vivikey.tech/chat', {
@@ -148,37 +156,44 @@
             color: black;
         }
 
-        .chat-input {
+        .chat-input-wrapper {
             display: flex;
             padding: 10px;
             background-color: #fff;
             border-top: 1px solid #ddd;
+            position: relative;
         }
 
-        .chat-input textarea {
+        .chat-input-wrapper textarea {
             flex: 1;
             padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 5px;
+            border-radius: 20px;
             resize: none;
             background-color: #f1f1f1;
             font-size: 14px;
+            min-height: 36px;
+            max-height: 150px;
+            overflow-y: auto;
+            padding-right: 50px; /* Отступ для кнопки */
         }
 
-        .chat-input button {
+        .chat-input-wrapper button {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
             background-color: #4CAF50;
-            color: white;
-            padding: 10px;
             border: none;
-            border-radius: 5px;
-            margin-left: 10px;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 16px;
             cursor: pointer;
-            font-size: 14px;
-            min-width: 80px;
-        }
-
-        .chat-input button:hover {
-            background-color: #45a049;
         }
 
         .chat-message {
