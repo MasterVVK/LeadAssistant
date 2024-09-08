@@ -81,7 +81,7 @@
         const chatBox = document.createElement('div');
         chatBox.classList.add('chat-box');
         chatBox.innerHTML = `
-            <div class="chat-header">AI Chat Assistant</div>
+            <div class="chat-header">AI Chat Assistant2</div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input">
                 <input type="text" id="userMessage" placeholder="Введите сообщение...">
