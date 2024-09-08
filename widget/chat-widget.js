@@ -191,12 +191,12 @@
             min-height: 36px;
             max-height: 150px;
             overflow-y: hidden;
-            padding-right: 60px; /* Отступ для кнопки */
+            padding-right: 70px; /* Отступ для кнопки */
         }
 
         .chat-input-wrapper button {
             position: absolute;
-            right: 10px;
+            right: 15px; /* Увеличиваем отступ справа */
             top: 50%;
             transform: translateY(-50%);
             background-color: #007bff; /* Синий цвет кнопки */
