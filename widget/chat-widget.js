@@ -13,7 +13,7 @@
             <div class="chat-header">AI Chat Assistant</div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input-wrapper">
-                <textarea id="userMessage" placeholder="Введите сообщение..." rows="1" style="height: 36px; overflow-y: hidden; padding: 8px; padding-right: 70px;"></textarea>
+                <textarea id="userMessage" placeholder="Введите сообщение..." rows="1" style="height: 36px; overflow-y: hidden; padding: 8px; padding-right: 60px;"></textarea>
                 <button id="sendMessage"><i class="send-icon">➤</i></button>
             </div>
         `;
@@ -50,7 +50,7 @@
                 event.preventDefault(); // Предотвращаем стандартное поведение Enter
                 sendMessage();
             } else if (event.key === 'Enter' && event.shiftKey) {
-                event.preventDefault(); // Добавляем перевод строки
+                event.prevent.preventDefault(); // Добавляем перевод строки
                 userMessage.value += '\n';
             }
         });
@@ -191,7 +191,7 @@
             min-height: 36px;
             max-height: 150px;
             overflow-y: hidden;
-            padding-right: 70px; /* Отступ для кнопки */
+            padding-right: 60px; /* Отступ для кнопки */
         }
 
         .chat-input-wrapper button {
@@ -202,14 +202,19 @@
             background-color: #007bff; /* Синий цвет кнопки */
             border: none;
             border-radius: 50%;
-            width: 40px; /* Увеличена ширина кнопки */
-            height: 40px; /* Увеличена высота кнопки */
+            width: 36px;
+            height: 36px;
             display: flex;
             justify-content: center;
             align-items: center;
             color: white;
             font-size: 18px;
             cursor: pointer;
+        }
+
+        .send-icon {
+            font-size: 18px; /* Уменьшаем размер иконки */
+            line-height: 18px;
         }
 
         .chat-message {
