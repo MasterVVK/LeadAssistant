@@ -13,7 +13,7 @@
             <div class="chat-header">AI Chat Assistant</div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input-wrapper">
-                <textarea id="userMessage" placeholder="Введите сообщение..." rows="1" style="height: 36px; overflow-y: hidden;"></textarea>
+                <textarea id="userMessage" placeholder="Введите сообщение..." rows="1" style="height: 36px; overflow-y: hidden; padding: 0;"></textarea>
                 <button id="sendMessage"><i class="send-icon">➤</i></button>
             </div>
         `;
@@ -68,7 +68,7 @@
 
             // Изменяем высоту поля ввода в зависимости от его содержимого
             if (scrollHeight > minHeight) {
-                userMessage.style.height = `${Math.min(scrollHeight, maxHeight) - 2}px`; // Уменьшаем высоту на 2px для устранения пустой строки
+                userMessage.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
             }
         });
 
