@@ -13,7 +13,7 @@
             <div class="chat-header">AI Chat Assistant</div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input-wrapper">
-                <textarea id="userMessage" placeholder="Введите сообщение..." rows="1" style="height: 36px; overflow-y: hidden; padding: 0;"></textarea>
+                <textarea id="userMessage" placeholder="Введите сообщение..." rows="1" style="height: 36px; overflow-y: hidden; padding: 8px;"></textarea>
                 <button id="sendMessage"><i class="send-icon">➤</i></button>
             </div>
         `;
@@ -182,9 +182,9 @@
 
         .chat-input-wrapper textarea {
             flex: 1;
-            padding: 10px;
+            padding: 8px; /* Добавлено больше отступов */
             border: 1px solid #ccc;
-            border-radius: 20px;
+            border-radius: 10px; /* Уменьшено скругление */
             resize: none;
             background-color: #f1f1f1;
             font-size: 16px;
