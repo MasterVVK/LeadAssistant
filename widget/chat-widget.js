@@ -116,7 +116,7 @@
             right: 20px;
             width: 60px;
             height: 60px;
-            background-color: #008CFF; /* Синий цвет */
+            background-color: #007bff; /* Синий цвет для основной схемы */
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -130,7 +130,7 @@
         }
 
         .chat-icon:hover {
-            background-color: #005F99; /* Более темный синий при наведении */
+            background-color: #0056b3; /* Темно-синий при наведении */
         }
 
         .chat-box {
@@ -139,13 +139,13 @@
             right: 20px;
             width: 350px;
             height: 500px;
-            background-color: #fff; /* Белый фон */
+            background-color: #ffffff; /* Белый фон чата */
             border-radius: 10px;
             display: none;
             flex-direction: column;
             z-index: 9999;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-            font-family: 'Roboto', sans-serif;
+            font-family: Arial, sans-serif; /* Основной шрифт сайта */
         }
 
         .chat-box.show {
@@ -153,7 +153,7 @@
         }
 
         .chat-header {
-            background-color: #008CFF; /* Синий цвет заголовка */
+            background-color: #007bff; /* Синий заголовок чата */
             color: white;
             padding: 15px;
             font-size: 18px;
@@ -167,7 +167,7 @@
             flex: 1;
             padding: 15px;
             overflow-y: auto;
-            background-color: #f9f9f9; /* Светлый фон сообщений */
+            background-color: #f5f5f5; /* Светлый фон сообщений */
             color: black;
             font-size: 16px;
         }
@@ -183,7 +183,7 @@
         .chat-input-wrapper textarea {
             flex: 1;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid #ccc;
             border-radius: 20px;
             resize: none;
             background-color: #f1f1f1;
@@ -199,7 +199,7 @@
             right: 10px;
             top: 50%;
             transform: translateY(-50%);
-            background-color: #008CFF; /* Синий цвет кнопки */
+            background-color: #007bff; /* Синий цвет кнопки */
             border: none;
             border-radius: 50%;
             width: 36px;
@@ -216,19 +216,19 @@
             margin-bottom: 10px;
             padding: 12px;
             border-radius: 8px;
-            background-color: #e0e0e0;
+            background-color: #e0e0e0; /* Светло-серый фон сообщений */
             color: black;
             word-wrap: break-word;
         }
 
         .chat-message.user {
-            background-color: #008CFF; /* Синий цвет сообщений пользователя */
+            background-color: #007bff; /* Синий цвет сообщений пользователя */
             color: white;
             text-align: right;
         }
 
         .chat-message.assistant {
-            background-color: #f1f1f1;
+            background-color: #f5f5f5;
             color: black;
             text-align: left;
         }
