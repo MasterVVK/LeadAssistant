@@ -53,11 +53,12 @@
                 padding: 10px;
                 background-color: #f9f9f9;
             }
-            .chat-input input {
+            .chat-input textarea {
                 flex: 1;
                 padding: 10px;
                 border: 1px solid #ddd;
                 border-radius: 5px;
+                resize: none; /* Отключаем изменение размера */
             }
             .chat-input button {
                 background-color: #5cb85c;
@@ -87,7 +88,7 @@
             <div class="chat-header">AI Chat Assistant</div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input">
-                <input type="text" id="userMessage" placeholder="Введите сообщение...">
+                <textarea id="userMessage" placeholder="Введите сообщение..." rows="2"></textarea>
                 <button id="sendMessage">Отправить</button>
             </div>
         `;
@@ -125,9 +126,9 @@
 
         // Обработчик нажатия клавиши Enter для отправки сообщения
         document.getElementById('userMessage').addEventListener('keydown', function(event) {
-            if (event.key === 'Enter' && !event.shiftKey) { // Отправка при нажатии Enter без Shift
+            if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault(); // Предотвращаем стандартное поведение Enter
-                sendMessage();
+                sendMessage(); // Отправка сообщения
             }
         });
 
