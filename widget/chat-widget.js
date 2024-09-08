@@ -262,13 +262,17 @@
         }
 
         #loadingIndicator {
-            color: gray;
+            color: #007bff; /* Сделаем точки ярко-синими */
             font-style: italic;
             display: flex;
             align-items: center;
+            font-size: 24px; /* Увеличим размер точек */
         }
 
         .loading-animation .dot {
+            display: inline-block;
+            font-size: 24px; /* Увеличим размер точек */
+            margin-right: 2px;
             animation: blink 1s infinite;
         }
 
