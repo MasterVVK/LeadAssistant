@@ -84,7 +84,7 @@
         const chatBox = document.createElement('div');
         chatBox.classList.add('chat-box');
         chatBox.innerHTML = `
-            <div class="chat-header">AI Chat Assistant2</div>
+            <div class="chat-header">AI Chat Assistant</div>
             <div class="chat-messages" id="chatMessages"></div>
             <div class="chat-input">
                 <input type="text" id="userMessage" placeholder="Введите сообщение...">
@@ -120,12 +120,25 @@
 
         // Функция для отправки сообщений на сервер
         document.getElementById('sendMessage').addEventListener('click', async function() {
+            sendMessage();
+        });
+
+        // Обработчик нажатия клавиши Enter для отправки сообщения
+        document.getElementById('userMessage').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) { // Отправка при нажатии Enter без Shift
+                event.preventDefault(); // Предотвращаем стандартное поведение Enter
+                sendMessage();
+            }
+        });
+
+        // Функция для отправки сообщения
+        async function sendMessage() {
             const message = document.getElementById('userMessage').value.trim();
             if (message === '') return;
 
             // Добавляем сообщение пользователя в чат
             appendMessage('Вы', message);
-            document.getElementById('userMessage').value = '';
+            document.getElementById('userMessage').value = ''; // Очищаем поле
 
             try {
                 const response = await fetch('https://fd.vivikey.tech/chat', {
@@ -140,7 +153,7 @@
             } catch (error) {
                 appendMessage('Ошибка', 'Произошла ошибка при отправке сообщения.');
             }
-        });
+        }
 
         // Функция для добавления сообщений в чат с поддержкой перевода строки
         function appendMessage(sender, message) {
