@@ -99,7 +99,7 @@ def create_assistant(client):
         tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
         )
 
-        # Создать новый файл assistant.json для загрузки в будущем. Создано Aibot.Direct
+        # Создать новый файл assistant.json для загрузки в будущем. 
         with open(assistant_file_path, 'w') as file:
             json.dump({'assistant_id': assistant.id}, file)
             print("Created a new assistant and saved the ID.")
