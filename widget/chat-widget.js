@@ -121,7 +121,7 @@
                 const data = await response.json();
 
                 // Убираем ссылки в сообщении ИИ
-                let assistantMessage = data.response.replace(/\\【.*?\\】/g, '');
+                let assistantMessage = data.response.replace(/\【.*?\】/g, '');
 
                 hideLoadingIndicator(); // Убираем индикатор после получения ответа
                 appendMessage('assistant', assistantMessage); // Ответ ассистента
