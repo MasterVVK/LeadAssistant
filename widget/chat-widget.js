@@ -1,5 +1,13 @@
 (function() {
     document.addEventListener('DOMContentLoaded', function() {
+        // Конфигурация чата, которую можно передать при подключении
+        var chatConfig = window.chatConfig || {
+            url: 'https://default-url.com', // URL по умолчанию
+            startEndpoint: '/start',
+            chatEndpoint: '/chat',
+            widgetSrc: 'https://default-url.com/widget/chat-widget.js' // Путь к виджету
+        };
+
         // Создание иконки чата
         const chatIcon = document.createElement('div');
         chatIcon.classList.add('chat-icon');
@@ -29,7 +37,7 @@
 
         async function initThread() {
             if (!thread_id) {
-                const response = await fetch('https://fd.vivikey.tech/start');
+                const response = await fetch(chatConfig.url + chatConfig.startEndpoint);
                 const data = await response.json();
                 thread_id = data.thread_id;
                 localStorage.setItem('thread_id', thread_id);
@@ -103,7 +111,7 @@
             showLoadingIndicator(); // Показываем индикатор ожидания
 
             try {
-                const response = await fetch('https://fd.vivikey.tech/chat', {
+                const response = await fetch(chatConfig.url + chatConfig.chatEndpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -113,7 +121,7 @@
                 const data = await response.json();
 
                 // Убираем ссылки в сообщении ИИ
-                let assistantMessage = data.response.replace(/\【.*?\】/g, '');
+                let assistantMessage = data.response.replace(/\\【.*?\\】/g, '');
 
                 hideLoadingIndicator(); // Убираем индикатор после получения ответа
                 appendMessage('assistant', assistantMessage); // Ответ ассистента
