@@ -1,0 +1,81 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Assistant Solution</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .container {
+            width: 90%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .section {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Добро пожаловать в Lead Assistant</h1>
+    <h2>Решение для салонов красоты</h2>
+
+    <!-- Секция с информацией из knowledge.json -->
+    <div class="section">
+        <h2>Часто задаваемые вопросы</h2>
+        <ul>
+            {% for item in knowledge %}
+                <li><strong>{{ item['Вопросы'] }}:</strong> {{ item['Ответы'] }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Секция с содержимым prompts.py -->
+    <div class="section">
+        <h2>Инструкции для ассистента</h2>
+        <pre>{{ prompts }}</pre>
+    </div>
+</div>
+
+<!-- Контейнер для виджета чата -->
+<div class="chat-container">
+    <script type="text/javascript">
+      window.chatConfig = {
+        url: 'https://ld.vivikey.tech',  // Базовый URL вашего API
+        startEndpoint: '/start',         // Точка входа для создания потока чата
+        chatEndpoint: '/chat',           // Точка для отправки сообщений
+        widgetSrc: 'https://fd.vivikey.tech/widget/chat-widget.js' // Путь к виджету
+      };
+
+      (function(d, t) {
+        var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+        v.src = window.chatConfig.widgetSrc;
+        v.type = 'text/javascript';
+        s.parentNode.insertBefore(v, s);
+      })(document, 'script');
+    </script>
+</div>
+
+</body>
+</html>

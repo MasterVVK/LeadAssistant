@@ -2,7 +2,7 @@ import json
 import os
 import time
 import openai
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from openai import OpenAI
 import functions
 
@@ -32,6 +32,17 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 assistant_id = functions.create_assistant(
     client)  # Эта функция из файла 'functions.py'
 
+@app.route('/')
+def index():
+    # Загрузка содержимого файлов knowledge.json и prompts.py
+    with open('knowledge.json', 'r', encoding='utf-8') as knowledge_file:
+        knowledge_data = json.load(knowledge_file)
+
+    with open('prompts.py', 'r', encoding='utf-8') as prompts_file:
+        prompts_data = prompts_file.read()
+
+    # Отображаем шаблон index.html с передачей данных
+    return render_template('index.html', knowledge=knowledge_data, prompts=prompts_data)
 
 # Запуск потока обсуждения
 @app.route('/start', methods=['GET'])
