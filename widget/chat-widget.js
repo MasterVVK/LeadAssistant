@@ -1,5 +1,5 @@
 (function() {
-    document.addEventListener('DOMContentLoaded', function() {
+    window.addEventListener('load', function() {
         // Конфигурация чата, которую можно передать при подключении
         var chatConfig = window.chatConfig || {
             url: 'https://default-url.com', // URL по умолчанию
