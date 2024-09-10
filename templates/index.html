@@ -59,23 +59,29 @@
 </div>
 
 <!-- Контейнер для виджета чата -->
-<div class="chat-container">
-    <script type="text/javascript">
-      window.chatConfig = {
-        url: 'https://ld.vivikey.tech',  // Базовый URL вашего API
-        startEndpoint: '/start',         // Точка входа для создания потока чата
-        chatEndpoint: '/chat',           // Точка для отправки сообщений
-        widgetSrc: 'https://fd.vivikey.tech/widget/chat-widget.js' // Путь к виджету
-      };
+<script type="text/javascript">
+  window.chatConfig = {
+    url: 'https://ld.vivikey.tech',  // Базовый URL вашего API
+    startEndpoint: '/start',         // Точка входа для создания потока чата
+    chatEndpoint: '/chat',           // Точка для отправки сообщений
+    widgetSrc: 'https://fd.vivikey.tech/widget/chat-widget.js' // Путь к виджету
+  };
 
-      (function(d, t) {
-        var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
-        v.src = window.chatConfig.widgetSrc;
-        v.type = 'text/javascript';
-        s.parentNode.insertBefore(v, s);
-      })(document, 'script');
-    </script>
-</div>
+  (function(d, t) {
+    var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+    v.async = true;
+    v.onload = function() {
+      console.log("Виджет загружен!");
+    };
+    v.onerror = function() {
+      console.log("Ошибка загрузки виджета.");
+    };
+    v.src = window.chatConfig.widgetSrc;
+    v.type = 'text/javascript';
+    s.parentNode.insertBefore(v, s);
+  })(document, 'script');
+</script>
+
 
 </body>
 </html>
