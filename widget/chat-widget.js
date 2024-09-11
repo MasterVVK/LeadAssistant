@@ -104,7 +104,13 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Ошибка при отправке сообщения.');
+                    if (response.status === 429) {
+                        console.error('Превышен лимит запросов даже после капчи.');
+                        appendMessage('assistant', 'Ошибка: превышен лимит запросов. Повторите позже.');
+                    } else {
+                        throw new Error('Ошибка при отправке сообщения.');
+                    }
+                    return;
                 }
 
                 const data = await response.json();
@@ -216,7 +222,6 @@
             }
         });
     });
-
 
     // Стили для чата, адаптированные под бело-синий дизайн
     const style = document.createElement('style');
