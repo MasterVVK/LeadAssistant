@@ -71,9 +71,9 @@
             }
         }
 
-        // Функция для проверки капчи, если превышен лимит запросов
-        async function handleCaptchaIfNeeded(responseStatus) {
-            if (responseStatus === 429) {  // Если получен статус 429 (лимит превышен)
+        // Проверка капчи, если сервер вернет ошибку лимита (статус 429)
+        async function handleCaptchaIfNeeded(response) {
+            if (response.status === 429) {  // Если сервер вернул ошибку лимита
                 const captchaQuestion = await fetchCaptcha();
                 if (captchaQuestion) {
                     const captchaAnswer = prompt(captchaQuestion);  // Окно для ввода ответа на капчу
@@ -91,7 +91,7 @@
                     return false;
                 }
             }
-            return true;  // Продолжаем, если лимит не превышен
+            return true;  // Если лимит не превышен
         }
 
         // Отправка сообщения
@@ -113,13 +113,14 @@
                     body: JSON.stringify({ message, thread_id }),
                 });
 
-                if (await handleCaptchaIfNeeded(response.status)) {  // Проверяем капчу при необходимости
+                // Проверяем, требуется ли капча (если сервер вернул статус 429)
+                if (await handleCaptchaIfNeeded(response)) {
                     const data = await response.json();
                     let assistantMessage = data.response.replace(/\【.*?\】/g, '');  // Убираем лишние символы
                     hideLoadingIndicator();  // Убираем индикатор после получения ответа
                     appendMessage('assistant', assistantMessage);  // Ответ ассистента
                 } else {
-                    hideLoadingIndicator();  // Убираем индикатор ожидания при ошибке
+                    hideLoadingIndicator();  // Убираем индикатор ожидания при ошибке капчи
                     appendMessage('assistant', 'Ошибка при прохождении капчи.');
                 }
 
@@ -158,13 +159,23 @@
             }
         }
 
+        // Обработчик кнопки отправки сообщения
         document.getElementById('sendMessage').addEventListener('click', sendMessage);
+
+        // Обработчик нажатия Enter для отправки сообщения
+        document.getElementById('userMessage').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();  // Предотвращаем перенос строки
+                sendMessage();  // Отправка сообщения
+            }
+        });
 
         const userMessage = document.getElementById('userMessage');
         const minHeight = 36;
         const maxHeight = 150;
         userMessage.style.height = `${minHeight}px`;
 
+        // Автоматическое изменение высоты поля ввода
         userMessage.addEventListener('input', function() {
             userMessage.style.height = `${minHeight}px`;  // Сброс высоты перед изменением
             const scrollHeight = userMessage.scrollHeight;
