@@ -98,6 +98,8 @@
             showLoadingIndicator();  // Показываем индикатор ожидания
 
             try {
+                console.log("Отправка сообщения:", message); // Лог сообщения перед отправкой
+
                 const response = await fetch(chatConfig.url + chatConfig.chatEndpoint, {
                     method: 'POST',
                     headers: {
@@ -117,6 +119,8 @@
                 }
 
                 const data = await response.json();
+                console.log('Ответ сервера после отправки сообщения:', data); // Лог ответа от сервера
+
                 let assistantMessage = data.response.replace(/\【.*?\】/g, '');  // Убираем лишние символы
                 hideLoadingIndicator();  // Убираем индикатор после получения ответа
                 appendMessage('assistant', assistantMessage);  // Ответ ассистента
@@ -146,6 +150,8 @@
             showLoadingIndicator();  // Показываем индикатор ожидания
 
             try {
+                console.log("Отправка сообщения:", message); // Лог отправляемого сообщения
+
                 const response = await fetch(chatConfig.url + chatConfig.chatEndpoint, {
                     method: 'POST',
                     headers: {
@@ -155,10 +161,13 @@
                 });
 
                 if (response.status === 429) {  // Если лимит превышен, запускаем капчу
+                    console.log("Превышен лимит запросов, запрашиваем капчу");
                     await fetchCaptcha();
                     hideLoadingIndicator();  // Убираем индикатор ожидания
                 } else {
                     const data = await response.json();
+                    console.log('Ответ сервера после отправки сообщения:', data); // Лог ответа сервера
+
                     let assistantMessage = data.response.replace(/\【.*?\】/g, '');  // Убираем лишние символы
                     hideLoadingIndicator();  // Убираем индикатор после получения ответа
                     appendMessage('assistant', assistantMessage);  // Ответ ассистента
