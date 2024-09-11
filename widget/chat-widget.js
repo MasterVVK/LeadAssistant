@@ -123,15 +123,21 @@
             const message = document.getElementById('userMessage').value.trim();
             if (message === '') return;
 
+            // Проверяем, если активна капча, проверяем введенный ответ
             if (isCaptchaRequired) {
-                // Сохраняем сообщение для отправки после капчи
-                savedMessage = message;
+                const captchaPassed = await verifyCaptcha(message);
                 document.getElementById('userMessage').value = ''; // Очищаем поле
-                appendMessage('assistant', 'Пожалуйста, пройдите капчу перед отправкой сообщения.');
+
+                // Если капча пройдена, отправляем сохраненное сообщение
+                if (captchaPassed && savedMessage) {
+                    await sendMessageAfterCaptcha(savedMessage);
+                    savedMessage = ''; // Очищаем сохраненное сообщение
+                }
                 return;
             }
 
-            appendMessage('user', message); // Добавление сообщения пользователя
+            // Если капча не требуется, отправляем сообщение
+            appendMessage('user', message); // Добавляем сообщение пользователя
             document.getElementById('userMessage').value = ''; // Очистка поля
 
             showLoadingIndicator(); // Показываем индикатор ожидания
@@ -146,6 +152,7 @@
                 });
 
                 if (response.status === 429) { // Если лимит превышен, запускаем капчу
+                    savedMessage = message; // Сохраняем сообщение для отправки после капчи
                     await fetchCaptcha();
                     hideLoadingIndicator(); // Убираем индикатор ожидания
                 } else {
