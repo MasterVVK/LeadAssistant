@@ -69,6 +69,9 @@
                     body: JSON.stringify({ answer: answer }),
                 });
                 const data = await response.json();
+
+                console.log('Ответ сервера на проверку капчи:', data); // Лог ответа сервера
+
                 if (data.success) {
                     isCaptchaRequired = false; // Сбрасываем флаг капчи
                     appendMessage('assistant', 'Капча успешно пройдена!');
@@ -222,6 +225,7 @@
             }
         });
     });
+
 
     // Стили для чата, адаптированные под бело-синий дизайн
     const style = document.createElement('style');
