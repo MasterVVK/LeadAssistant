@@ -72,6 +72,7 @@
                 if (data.success) {
                     isCaptchaRequired = false; // Сбрасываем флаг капчи
                     appendMessage('assistant', 'Капча успешно пройдена!');
+                    console.log('Капча пройдена, отправка сохраненного сообщения...');
                     if (savedMessage !== '') {
                         await sendSavedMessage(); // Отправляем сообщение, введенное до капчи
                     }
@@ -102,6 +103,10 @@
                     body: JSON.stringify({ message, thread_id }),
                 });
 
+                if (!response.ok) {
+                    throw new Error('Ошибка при отправке сообщения.');
+                }
+
                 const data = await response.json();
                 let assistantMessage = data.response.replace(/\【.*?\】/g, '');  // Убираем лишние символы
                 hideLoadingIndicator();  // Убираем индикатор после получения ответа
@@ -109,6 +114,7 @@
             } catch (error) {
                 hideLoadingIndicator();  // Убираем индикатор при ошибке
                 appendMessage('assistant', 'Ошибка при отправке сообщения.');
+                console.error("Ошибка при отправке сообщения:", error);
             }
         }
 
@@ -151,6 +157,7 @@
             } catch (error) {
                 hideLoadingIndicator();  // Убираем индикатор при ошибке
                 appendMessage('assistant', 'Ошибка при отправке сообщения.');
+                console.error("Ошибка при отправке сообщения:", error);
             }
         }
 
