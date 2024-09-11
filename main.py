@@ -1,111 +1,119 @@
 import json
 import os
 import time
+import random
 import openai
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, session, redirect, url_for
 from openai import OpenAI
 import functions
-
-# Проверка совместимости версии OpenAI
-from packaging import version
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 OPENAI_API_KEY = os.environ['OPENAI_API_KEY']
 
+# Проверка версии OpenAI
+from packaging import version
 
 required_version = version.parse("1.1.1")
 current_version = version.parse(openai.__version__)
 
 if current_version < required_version:
-  raise ValueError(
-      f"Error: OpenAI version {openai.__version__} is less than the required version 1.1.1"
-  )
+    raise ValueError(
+        f"Error: OpenAI version {openai.__version__} is less than the required version 1.1.1"
+    )
 else:
-  print("OpenAI version is compatible.")
+    print("OpenAI version is compatible.")
 
-# Создание Flask приложения
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Секретный ключ для сессий
 
-# Инициализация клиента OpenAI
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# Создание или загрузка помощника
-assistant_id = functions.create_assistant(
-    client)  # Эта функция из файла 'functions.py'
+# Инициализация Flask-Limiter
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["5 per minute"]  # Лимит 5 запросов в минуту
+)
 
-@app.route('/')
-def index():
-    # Загрузка содержимого файлов knowledge.json и prompts.py
-    with open('knowledge.json', 'r', encoding='utf-8') as knowledge_file:
-        knowledge_data = json.load(knowledge_file)
+assistant_id = functions.create_assistant(client)
 
-    with open('prompts.py', 'r', encoding='utf-8') as prompts_file:
-        prompts_data = prompts_file.read()
+# Вопросы и ответы для капчи
+QUESTIONS = {
+    "Сколько будет 2 + 3?": 5,
+    "Сколько будет 4 + 1?": 5,
+    "Сколько будет 10 - 7?": 3,
+    "Сколько будет 6 - 2?": 4,
+}
 
-    # Отображаем шаблон index.html с передачей данных
-    return render_template('index.html', knowledge=knowledge_data, prompts=prompts_data)
+# Генерация вопроса для капчи
+def generate_captcha():
+    question, answer = random.choice(list(QUESTIONS.items()))
+    session['captcha_answer'] = answer  # Сохраняем правильный ответ в сессии
+    return question
 
-# Запуск потока обсуждения
+# API для получения вопроса капчи
+@app.route('/get-captcha', methods=['GET'])
+def get_captcha():
+    question = generate_captcha()
+    return jsonify({"question": question})
+
+# API для проверки ответа на капчу
+@app.route('/check-captcha', methods=['POST'])
+def check_captcha():
+    user_answer = int(request.json.get('answer', 0))
+    if user_answer == session.get('captcha_answer'):
+        # Если капча пройдена, сбрасываем лимит для текущего запроса
+        session['captcha_passed'] = True
+        return jsonify({"success": True})
+    else:
+        return jsonify({"success": False, "error": "Неправильный ответ. Попробуйте снова."})
+
+# Стартовый маршрут для потока обсуждения
 @app.route('/start', methods=['GET'])
+@limiter.limit("2 per minute")
 def start_conversation():
-  print("Starting a new conversation...")
-  thread = client.beta.threads.create()
-  print(f"New thread created with ID: {thread.id}")
-  return jsonify({"thread_id": thread.id})
+    thread = client.beta.threads.create()
+    return jsonify({"thread_id": thread.id})
 
-
-# Генерация ответа
+# Маршрут для чата с проверкой на превышение лимита
 @app.route('/chat', methods=['POST'])
+@limiter.limit("5 per minute", exempt_when=lambda: session.get('captcha_passed', False))
 def chat():
-  data = request.json
-  thread_id = data.get('thread_id')
-  user_input = data.get('message', '')
+    data = request.json
+    thread_id = data.get('thread_id')
+    user_input = data.get('message', '')
 
-  if not thread_id:
-    print("Error: Missing thread_id")
-    return jsonify({"error": "Missing thread_id"}), 400
+    if not thread_id:
+        return jsonify({"error": "Missing thread_id"}), 400
 
-  print(f"Received message: {user_input} for thread ID: {thread_id}")
+    # Если лимит превышен, перенаправляем пользователя на капчу
+    if request.endpoint == 'limiter.exceeded':
+        return redirect(url_for('get_captcha'))
 
-  # Добавление сообщения пользователя в поток
-  client.beta.threads.messages.create(thread_id=thread_id,
-                                      role="user",
-                                      content=user_input)
+    # Если лимит не превышен, продолжаем выполнение запроса
+    client.beta.threads.messages.create(thread_id=thread_id, role="user", content=user_input)
+    run = client.beta.threads.runs.create(thread_id=thread_id, assistant_id=assistant_id)
 
-  # Запуск помощника
-  run = client.beta.threads.runs.create(thread_id=thread_id,
-                                        assistant_id=assistant_id)
+    while True:
+        run_status = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run.id)
+        if run_status.status == 'completed':
+            break
+        elif run_status.status == 'requires_action':
+            for tool_call in run_status.required_action.submit_tool_outputs.tool_calls:
+                if tool_call.function.name == "create_lead":
+                    arguments = json.loads(tool_call.function.arguments)
+                    output = functions.create_lead(arguments["name"], arguments["phone"], arguments["date"], arguments["service"])
+                    client.beta.threads.runs.submit_tool_outputs(thread_id=thread_id, run_id=run.id, tool_outputs=[{
+                        "tool_call_id": tool_call.id,
+                        "output": json.dumps(output)
+                    }])
+        time.sleep(1)
 
-  # Проверка необходимости действия в ходе выполнения
-  while True:
-    run_status = client.beta.threads.runs.retrieve(thread_id=thread_id,
-                                                   run_id=run.id)
-    # Вывод статуса выполнения: {run_status.status}
-    if run_status.status == 'completed':
-      break
-    elif run_status.status == 'requires_action':
-      # Обработка вызова функции
-      for tool_call in run_status.required_action.submit_tool_outputs.tool_calls:
-        if tool_call.function.name == "create_lead":
-          # Создание лидов
-          arguments = json.loads(tool_call.function.arguments)
-          output = functions.create_lead(arguments["name"], arguments["phone"], arguments["date"], arguments["service"])
-          client.beta.threads.runs.submit_tool_outputs(thread_id=thread_id,
-                                                       run_id=run.id,
-                                                       tool_outputs=[{
-                                                           "tool_call_id":
-                                                           tool_call.id,
-                                                           "output":
-                                                           json.dumps(output)
-                                                       }])
-      time.sleep(1)  # Ожидание одной секунды перед следующей проверкой
+    messages = client.beta.threads.messages.list(thread_id=thread_id)
+    response = messages.data[0].content[0].text.value
 
-  # Получение и возврат последнего сообщения от помощника
-  messages = client.beta.threads.messages.list(thread_id=thread_id)
-  response = messages.data[0].content[0].text.value
-
-  print(f"Assistant response: {response}")
-  return jsonify({"response": response})
-
+    return jsonify({"response": response})
 
 if __name__ == '__main__':
-  app.run(host='0.0.0.0', port=8085)
+    app.run(host='0.0.0.0', port=8085)
