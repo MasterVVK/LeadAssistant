@@ -4,7 +4,7 @@
             url: 'https://default-url.com', // Замените на ваш URL
             startEndpoint: '/start',
             chatEndpoint: '/chat',
-            widgetSrc: 'https://default-url.com/widget/chat-widget.js'
+            widgetSrc: 'https://default-url.com/widget/chat-widget.js' // Путь к виджету
         };
 
         let isCaptchaRequired = false; // Флаг для определения, требуется ли ввод капчи
@@ -68,32 +68,38 @@
                     body: JSON.stringify({ answer: answer }),
                 });
                 const data = await response.json();
-
                 if (data.success) {
                     isCaptchaRequired = false; // Сбрасываем флаг капчи
                     appendMessage('assistant', 'Капча успешно пройдена!');
                 } else {
                     appendMessage('assistant', 'Неправильный ответ. Попробуйте снова.');
                 }
+                return data.success;
             } catch (error) {
-                appendMessage('assistant', 'Ошибка при проверке капчи. Попробуйте снова.');
+                console.error("Ошибка при проверке капчи:", error);
+                return false;
             }
         }
 
-        // Функция отправки сообщения
+        // Отправка сообщения
         async function sendMessage() {
             const message = document.getElementById('userMessage').value.trim();
             if (message === '') return;
 
             if (isCaptchaRequired) {
-                appendMessage('assistant', 'Пожалуйста, пройдите капчу перед отправкой сообщения.');
-                return;
+                // Если требуется капча, проверяем введенный ответ
+                const captchaPassed = await verifyCaptcha(message);
+                document.getElementById('userMessage').value = ''; // Очищаем поле
+                if (captchaPassed) {
+                    appendMessage('user', message);  // Добавляем сообщение пользователя
+                }
+                return; // Останавливаем дальнейшую отправку сообщения
             }
 
-            appendMessage('user', message);  // Добавляем сообщение пользователя
-            document.getElementById('userMessage').value = '';  // Очищаем поле ввода
+            appendMessage('user', message);  // Добавление сообщения пользователя
+            document.getElementById('userMessage').value = '';  // Очистка поля
 
-            showLoadingIndicator();  // Показываем индикатор загрузки
+            showLoadingIndicator();  // Показываем индикатор ожидания
 
             try {
                 const response = await fetch(chatConfig.url + chatConfig.chatEndpoint, {
@@ -104,20 +110,18 @@
                     body: JSON.stringify({ message, thread_id }),
                 });
 
-                if (response.status === 429) {
-                    console.log("Превышен лимит запросов, запрашиваем капчу");
-                    await fetchCaptcha();  // Запрос капчи при превышении лимита запросов
-                    hideLoadingIndicator();
+                if (response.status === 429) {  // Если лимит превышен, запускаем капчу
+                    await fetchCaptcha();
+                    hideLoadingIndicator();  // Убираем индикатор ожидания
                 } else {
                     const data = await response.json();
-                    let assistantMessage = data.response.replace(/\\【.*?\\】/g, '');  // Убираем лишние символы
-                    hideLoadingIndicator();
+                    let assistantMessage = data.response.replace(/\【.*?\】/g, '');  // Убираем лишние символы
+                    hideLoadingIndicator();  // Убираем индикатор после получения ответа
                     appendMessage('assistant', assistantMessage);  // Ответ ассистента
                 }
             } catch (error) {
-                hideLoadingIndicator();
+                hideLoadingIndicator();  // Убираем индикатор при ошибке
                 appendMessage('assistant', 'Ошибка при отправке сообщения.');
-                console.error("Ошибка при отправке сообщения:", error);
             }
         }
 
@@ -150,7 +154,7 @@
             }
         }
 
-        // Обработчик отправки сообщения
+        // Обработчик кнопки отправки сообщения
         document.getElementById('sendMessage').addEventListener('click', sendMessage);
 
         // Обработчик нажатия Enter для отправки сообщения
@@ -186,7 +190,7 @@
             right: 20px;
             width: 60px;
             height: 60px;
-            background-color: #007bff;
+            background-color: #007bff; /* Синий цвет для основной схемы */
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -200,7 +204,7 @@
         }
 
         .chat-icon:hover {
-            background-color: #0056b3;
+            background-color: #0056b3; /* Темно-синий при наведении */
         }
 
         .chat-box {
@@ -209,13 +213,13 @@
             right: 20px;
             width: 350px;
             height: 500px;
-            background-color: #ffffff;
+            background-color: #ffffff; /* Белый фон чата */
             border-radius: 10px;
             display: none;
             flex-direction: column;
             z-index: 9999;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-            font-family: Arial, sans-serif;
+            font-family: Arial, sans-serif; /* Основной шрифт сайта */
         }
 
         .chat-box.show {
@@ -223,7 +227,7 @@
         }
 
         .chat-header {
-            background-color: #007bff;
+            background-color: #007bff; /* Синий заголовок чата */
             color: white;
             padding: 15px;
             font-size: 18px;
@@ -237,7 +241,7 @@
             flex: 1;
             padding: 15px;
             overflow-y: auto;
-            background-color: #f5f5f5;
+            background-color: #f5f5f5; /* Светлый фон сообщений */
             color: black;
             font-size: 16px;
         }
@@ -245,7 +249,7 @@
         .chat-input-wrapper {
             display: flex;
             padding: 10px;
-            background-color: #fff;
+            background-color: #fff; /* Белый фон ввода */
             border-top: 1px solid #ddd;
             position: relative;
         }
@@ -266,10 +270,10 @@
 
         .chat-input-wrapper button {
             position: absolute;
-            right: 15px;
+            right: 15px; /* Увеличиваем отступ справа */
             top: 50%;
             transform: translateY(-50%);
-            background-color: #007bff;
+            background-color: #007bff; /* Синий цвет кнопки */
             border: none;
             border-radius: 50%;
             width: 36px;
@@ -291,13 +295,13 @@
             margin-bottom: 10px;
             padding: 12px;
             border-radius: 8px;
-            background-color: #e0e0e0;
+            background-color: #e0e0e0; /* Светло-серый фон сообщений */
             color: black;
             word-wrap: break-word;
         }
 
         .chat-message.user {
-            background-color: #007bff;
+            background-color: #007bff; /* Синий цвет сообщений пользователя */
             color: white;
             text-align: right;
         }
@@ -309,16 +313,16 @@
         }
 
         #loadingIndicator {
-            color: #007bff;
+            color: #007bff; /* Сделаем точки ярко-синими */
             font-style: italic;
             display: flex;
             align-items: center;
-            font-size: 24px;
+            font-size: 24px; /* Увеличим размер точек */
         }
 
         .loading-animation .dot {
             display: inline-block;
-            font-size: 24px;
+            font-size: 24px; /* Увеличим размер точек */
             margin-right: 2px;
             animation: blink 1s infinite;
         }
