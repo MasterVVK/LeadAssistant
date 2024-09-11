@@ -120,6 +120,7 @@
             }
 
             unblockInput(); // Разблокируем ввод сообщения
+            focusInput(); // Возвращаем фокус в поле ввода
         }
 
         // Основная функция отправки сообщения
@@ -143,12 +144,16 @@
                 }
 
                 unblockInput(); // Разблокируем ввод после капчи
+                focusInput(); // Возвращаем фокус в поле ввода
                 return;
             }
 
             // Если капча не требуется, отправляем сообщение
             appendMessage('user', message); // Добавляем сообщение пользователя
             document.getElementById('userMessage').value = ''; // Очистка поля
+
+            // Убираем placeholder после первого отправленного сообщения
+            document.getElementById('userMessage').removeAttribute('placeholder');
 
             showLoadingIndicator(); // Показываем индикатор ожидания
 
@@ -177,6 +182,7 @@
             }
 
             unblockInput(); // Разблокируем ввод после отправки
+            focusInput(); // Возвращаем фокус в поле ввода
         }
 
         // Функция блокировки ввода сообщения
@@ -191,6 +197,11 @@
             isSendingMessage = false;
             document.getElementById('userMessage').disabled = false;
             document.getElementById('sendMessage').disabled = false;
+        }
+
+        // Функция для возврата фокуса в поле ввода
+        function focusInput() {
+            document.getElementById('userMessage').focus();
         }
 
         // Функция добавления сообщений в чат
