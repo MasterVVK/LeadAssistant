@@ -7,6 +7,9 @@
             widgetSrc: 'https://default-url.com/widget/chat-widget.js' // Путь к виджету
         };
 
+        let isCaptchaRequired = false; // Флаг для определения, требуется ли ввод капчи
+        let captchaQuestion = ''; // Вопрос капчи
+
         const chatIcon = document.createElement('div');
         chatIcon.classList.add('chat-icon');
         chatIcon.innerHTML = '💬';
@@ -46,10 +49,11 @@
             try {
                 const response = await fetch('/get-captcha');
                 const data = await response.json();
-                return data.question;
+                captchaQuestion = data.question;
+                isCaptchaRequired = true; // Устанавливаем флаг для капчи
+                appendMessage('assistant', `Капча: ${captchaQuestion}`); // Отображаем вопрос капчи в чате
             } catch (error) {
                 console.error("Ошибка при запросе капчи:", error);
-                return null;
             }
         }
 
@@ -64,6 +68,12 @@
                     body: JSON.stringify({ answer: answer }),
                 });
                 const data = await response.json();
+                if (data.success) {
+                    isCaptchaRequired = false; // Сбрасываем флаг капчи
+                    appendMessage('assistant', 'Капча успешно пройдена!');
+                } else {
+                    appendMessage('assistant', 'Неправильный ответ. Попробуйте снова.');
+                }
                 return data.success;
             } catch (error) {
                 console.error("Ошибка при проверке капчи:", error);
@@ -71,33 +81,20 @@
             }
         }
 
-        // Проверка капчи, если сервер вернет ошибку лимита (статус 429)
-        async function handleCaptchaIfNeeded(response) {
-            if (response.status === 429) {  // Если сервер вернул ошибку лимита
-                const captchaQuestion = await fetchCaptcha();
-                if (captchaQuestion) {
-                    const captchaAnswer = prompt(captchaQuestion);  // Окно для ввода ответа на капчу
-                    const isCorrect = await verifyCaptcha(captchaAnswer);
-
-                    if (isCorrect) {
-                        alert("Капча пройдена!");
-                        return true;
-                    } else {
-                        alert("Неправильный ответ. Попробуйте снова.");
-                        return false;
-                    }
-                } else {
-                    alert("Ошибка при загрузке капчи.");
-                    return false;
-                }
-            }
-            return true;  // Если лимит не превышен
-        }
-
         // Отправка сообщения
         async function sendMessage() {
             const message = document.getElementById('userMessage').value.trim();
             if (message === '') return;
+
+            if (isCaptchaRequired) {
+                // Если требуется капча, проверяем введенный ответ
+                const captchaPassed = await verifyCaptcha(message);
+                document.getElementById('userMessage').value = ''; // Очищаем поле
+                if (captchaPassed) {
+                    appendMessage('user', message);  // Добавляем сообщение пользователя
+                }
+                return; // Останавливаем дальнейшую отправку сообщения
+            }
 
             appendMessage('user', message);  // Добавление сообщения пользователя
             document.getElementById('userMessage').value = '';  // Очистка поля
@@ -113,17 +110,15 @@
                     body: JSON.stringify({ message, thread_id }),
                 });
 
-                // Проверяем, требуется ли капча (если сервер вернул статус 429)
-                if (await handleCaptchaIfNeeded(response)) {
+                if (response.status === 429) {  // Если лимит превышен, запускаем капчу
+                    await fetchCaptcha();
+                    hideLoadingIndicator();  // Убираем индикатор ожидания
+                } else {
                     const data = await response.json();
                     let assistantMessage = data.response.replace(/\【.*?\】/g, '');  // Убираем лишние символы
                     hideLoadingIndicator();  // Убираем индикатор после получения ответа
                     appendMessage('assistant', assistantMessage);  // Ответ ассистента
-                } else {
-                    hideLoadingIndicator();  // Убираем индикатор ожидания при ошибке капчи
-                    appendMessage('assistant', 'Ошибка при прохождении капчи.');
                 }
-
             } catch (error) {
                 hideLoadingIndicator();  // Убираем индикатор при ошибке
                 appendMessage('assistant', 'Ошибка при отправке сообщения.');
