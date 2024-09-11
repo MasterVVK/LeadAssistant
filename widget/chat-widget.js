@@ -9,6 +9,7 @@
 
         let isCaptchaRequired = false; // Флаг для определения, требуется ли ввод капчи
         let captchaQuestion = ''; // Вопрос капчи
+        let savedMessage = ''; // Сохраненное сообщение перед капчей
 
         const chatIcon = document.createElement('div');
         chatIcon.classList.add('chat-icon');
@@ -71,6 +72,12 @@
                 if (data.success) {
                     isCaptchaRequired = false; // Сбрасываем флаг капчи
                     appendMessage('assistant', 'Капча успешно пройдена!');
+
+                    // Автоматическая отправка сохраненного сообщения
+                    if (savedMessage) {
+                        await sendMessageAfterCaptcha(savedMessage);
+                        savedMessage = ''; // Очищаем сохраненное сообщение
+                    }
                 } else {
                     appendMessage('assistant', 'Неправильный ответ. Попробуйте снова.');
                 }
@@ -81,25 +88,11 @@
             }
         }
 
-        // Отправка сообщения
-        async function sendMessage() {
-            const message = document.getElementById('userMessage').value.trim();
-            if (message === '') return;
+        // Отправка сообщения после успешного прохождения капчи
+        async function sendMessageAfterCaptcha(message) {
+            appendMessage('user', message); // Добавляем сообщение пользователя
 
-            if (isCaptchaRequired) {
-                // Если требуется капча, проверяем введенный ответ
-                const captchaPassed = await verifyCaptcha(message);
-                document.getElementById('userMessage').value = ''; // Очищаем поле
-                if (captchaPassed) {
-                    appendMessage('user', message);  // Добавляем сообщение пользователя
-                }
-                return; // Останавливаем дальнейшую отправку сообщения
-            }
-
-            appendMessage('user', message);  // Добавление сообщения пользователя
-            document.getElementById('userMessage').value = '';  // Очистка поля
-
-            showLoadingIndicator();  // Показываем индикатор ожидания
+            showLoadingIndicator(); // Показываем индикатор ожидания
 
             try {
                 const response = await fetch(chatConfig.url + chatConfig.chatEndpoint, {
@@ -110,17 +103,59 @@
                     body: JSON.stringify({ message, thread_id }),
                 });
 
-                if (response.status === 429) {  // Если лимит превышен, запускаем капчу
+                if (response.status === 429) { // Если лимит превышен, запускаем капчу
                     await fetchCaptcha();
-                    hideLoadingIndicator();  // Убираем индикатор ожидания
+                    hideLoadingIndicator(); // Убираем индикатор ожидания
                 } else {
                     const data = await response.json();
-                    let assistantMessage = data.response.replace(/\【.*?\】/g, '');  // Убираем лишние символы
-                    hideLoadingIndicator();  // Убираем индикатор после получения ответа
-                    appendMessage('assistant', assistantMessage);  // Ответ ассистента
+                    let assistantMessage = data.response.replace(/\\【.*?\\】/g, ''); // Убираем лишние символы
+                    hideLoadingIndicator(); // Убираем индикатор после получения ответа
+                    appendMessage('assistant', assistantMessage); // Ответ ассистента
                 }
             } catch (error) {
-                hideLoadingIndicator();  // Убираем индикатор при ошибке
+                hideLoadingIndicator(); // Убираем индикатор при ошибке
+                appendMessage('assistant', 'Ошибка при отправке сообщения.');
+            }
+        }
+
+        // Основная функция отправки сообщения
+        async function sendMessage() {
+            const message = document.getElementById('userMessage').value.trim();
+            if (message === '') return;
+
+            if (isCaptchaRequired) {
+                // Сохраняем сообщение для отправки после капчи
+                savedMessage = message;
+                document.getElementById('userMessage').value = ''; // Очищаем поле
+                appendMessage('assistant', 'Пожалуйста, пройдите капчу перед отправкой сообщения.');
+                return;
+            }
+
+            appendMessage('user', message); // Добавление сообщения пользователя
+            document.getElementById('userMessage').value = ''; // Очистка поля
+
+            showLoadingIndicator(); // Показываем индикатор ожидания
+
+            try {
+                const response = await fetch(chatConfig.url + chatConfig.chatEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message, thread_id }),
+                });
+
+                if (response.status === 429) { // Если лимит превышен, запускаем капчу
+                    await fetchCaptcha();
+                    hideLoadingIndicator(); // Убираем индикатор ожидания
+                } else {
+                    const data = await response.json();
+                    let assistantMessage = data.response.replace(/\\【.*?\\】/g, ''); // Убираем лишние символы
+                    hideLoadingIndicator(); // Убираем индикатор после получения ответа
+                    appendMessage('assistant', assistantMessage); // Ответ ассистента
+                }
+            } catch (error) {
+                hideLoadingIndicator(); // Убираем индикатор при ошибке
                 appendMessage('assistant', 'Ошибка при отправке сообщения.');
             }
         }
@@ -130,9 +165,9 @@
             const messagesDiv = document.getElementById('chatMessages');
             const newMessage = document.createElement('div');
             newMessage.classList.add('chat-message', sender);
-            newMessage.innerHTML = message.replace(/\n/g, '<br>');  // Поддержка перевода строки
+            newMessage.innerHTML = message.replace(/\n/g, '<br>'); // Поддержка перевода строки
             messagesDiv.appendChild(newMessage);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;  // Прокрутка вниз
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Прокрутка вниз
         }
 
         // Показываем индикатор загрузки
@@ -160,8 +195,8 @@
         // Обработчик нажатия Enter для отправки сообщения
         document.getElementById('userMessage').addEventListener('keydown', function(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();  // Предотвращаем перенос строки
-                sendMessage();  // Отправка сообщения
+                event.preventDefault(); // Предотвращаем перенос строки
+                sendMessage(); // Отправка сообщения
             }
         });
 
@@ -172,11 +207,11 @@
 
         // Автоматическое изменение высоты поля ввода
         userMessage.addEventListener('input', function() {
-            userMessage.style.height = `${minHeight}px`;  // Сброс высоты перед изменением
+            userMessage.style.height = `${minHeight}px`; // Сброс высоты перед изменением
             const scrollHeight = userMessage.scrollHeight;
 
             if (scrollHeight > minHeight) {
-                userMessage.style.height = `${Math.min(scrollHeight, maxHeight)}px`;  // Изменение высоты поля ввода
+                userMessage.style.height = `${Math.min(scrollHeight, maxHeight)}px`; // Изменение высоты поля ввода
             }
         });
     });
