@@ -78,14 +78,17 @@
                     console.log('Капча пройдена, отправка сохраненного сообщения...');
                     if (savedMessage !== '') {
                         await sendSavedMessage(); // Отправляем сообщение, введенное до капчи
+                    } else {
+                        console.log('Нет сохраненного сообщения для отправки после капчи.');
                     }
                 } else {
-                    appendMessage('assistant', 'Неправильный ответ. Попробуйте снова.');
+                    appendMessage('assistant', 'Неправильный ответ. Попробуйте снова.'); // Показать сообщение в чате
+                    console.log('Неверный ответ на капчу:', data);  // Лог неверного ответа
                 }
                 return data.success;
             } catch (error) {
                 console.error("Ошибка при проверке капчи:", error);
-                return false;
+                appendMessage('assistant', 'Ошибка при проверке капчи. Попробуйте снова.');
             }
         }
 
@@ -98,7 +101,7 @@
             showLoadingIndicator();  // Показываем индикатор ожидания
 
             try {
-                console.log("Отправка сообщения:", message); // Лог сообщения перед отправкой
+                console.log("Отправка сообщения после капчи:", message); // Лог отправляемого сообщения после капчи
 
                 const response = await fetch(chatConfig.url + chatConfig.chatEndpoint, {
                     method: 'POST',
@@ -141,6 +144,7 @@
                 savedMessage = message;
                 document.getElementById('userMessage').value = '';  // Очищаем поле ввода
                 appendMessage('user', message);  // Отображаем сообщение, но не отправляем его
+                console.log('Сообщение сохранено до капчи:', savedMessage);  // Лог сохраненного сообщения
                 return; // Останавливаем отправку до проверки капчи
             }
 
@@ -234,7 +238,6 @@
             }
         });
     });
-
 
     // Стили для чата, адаптированные под бело-синий дизайн
     const style = document.createElement('style');
