@@ -4,12 +4,11 @@
             url: 'https://default-url.com', // Замените на ваш URL
             startEndpoint: '/start',
             chatEndpoint: '/chat',
-            widgetSrc: 'https://default-url.com/widget/chat-widget.js' // Путь к виджету
+            widgetSrc: 'https://default-url.com/widget/chat-widget.js'
         };
 
         let isCaptchaRequired = false; // Флаг для определения, требуется ли ввод капчи
         let captchaQuestion = ''; // Вопрос капчи
-        let savedMessage = ''; // Сообщение, введенное перед капчей
 
         const chatIcon = document.createElement('div');
         chatIcon.classList.add('chat-icon');
@@ -70,92 +69,33 @@
                 });
                 const data = await response.json();
 
-                console.log('Ответ сервера на проверку капчи:', data); // Лог ответа сервера
-
                 if (data.success) {
                     isCaptchaRequired = false; // Сбрасываем флаг капчи
                     appendMessage('assistant', 'Капча успешно пройдена!');
-                    console.log('Капча пройдена, отправка сохраненного сообщения...');
-                    if (savedMessage !== '') {
-                        await sendSavedMessage(); // Отправляем сообщение, введенное до капчи
-                    } else {
-                        console.log('Нет сохраненного сообщения для отправки после капчи.');
-                    }
                 } else {
-                    appendMessage('assistant', 'Неправильный ответ. Попробуйте снова.'); // Показать сообщение в чате
-                    console.log('Неверный ответ на капчу:', data); // Лог неверного ответа
+                    appendMessage('assistant', 'Неправильный ответ. Попробуйте снова.');
                 }
-                return data.success;
             } catch (error) {
-                console.error("Ошибка при проверке капчи:", error);
-                appendMessage('assistant', 'Ошибка при проверке капчи. Попробуйте снова.'); // Показать сообщение об ошибке в чате
+                appendMessage('assistant', 'Ошибка при проверке капчи. Попробуйте снова.');
             }
         }
 
-        // Отправка сохраненного сообщения после капчи
-        async function sendSavedMessage() {
-            const message = savedMessage;
-            savedMessage = '';  // Очищаем сохраненное сообщение после отправки
-
-            appendMessage('user', message);  // Добавление сообщения пользователя
-            showLoadingIndicator();  // Показываем индикатор ожидания
-
-            try {
-                console.log("Отправка сообщения после капчи:", message); // Лог отправляемого сообщения после капчи
-
-                const response = await fetch(chatConfig.url + chatConfig.chatEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ message, thread_id }),
-                });
-
-                if (!response.ok) {
-                    if (response.status === 429) {
-                        console.error('Превышен лимит запросов даже после капчи.');
-                        appendMessage('assistant', 'Ошибка: превышен лимит запросов. Повторите позже.');
-                    } else {
-                        throw new Error('Ошибка при отправке сообщения.');
-                    }
-                    return;
-                }
-
-                const data = await response.json();
-                console.log('Ответ сервера после отправки сообщения:', data); // Лог ответа от сервера
-
-                let assistantMessage = data.response.replace(/\【.*?\】/g, '');  // Убираем лишние символы
-                hideLoadingIndicator();  // Убираем индикатор после получения ответа
-                appendMessage('assistant', assistantMessage);  // Ответ ассистента
-            } catch (error) {
-                hideLoadingIndicator();  // Убираем индикатор при ошибке
-                appendMessage('assistant', 'Ошибка при отправке сообщения.');
-                console.error("Ошибка при отправке сообщения:", error);
-            }
-        }
-
-        // Отправка сообщения
+        // Функция отправки сообщения
         async function sendMessage() {
             const message = document.getElementById('userMessage').value.trim();
             if (message === '') return;
 
             if (isCaptchaRequired) {
-                // Если требуется капча, сохраняем сообщение для отправки после проверки капчи
-                savedMessage = message;
-                document.getElementById('userMessage').value = '';  // Очищаем поле ввода
-                appendMessage('user', message);  // Отображаем сообщение, но не отправляем его
-                console.log('Сообщение сохранено до капчи:', savedMessage);  // Лог сохраненного сообщения
-                return; // Останавливаем отправку до проверки капчи
+                appendMessage('assistant', 'Пожалуйста, пройдите капчу перед отправкой сообщения.');
+                return;
             }
 
-            appendMessage('user', message);  // Добавление сообщения пользователя
-            document.getElementById('userMessage').value = '';  // Очистка поля
+            appendMessage('user', message);  // Добавляем сообщение пользователя
+            document.getElementById('userMessage').value = '';  // Очищаем поле ввода
 
-            showLoadingIndicator();  // Показываем индикатор ожидания
+            showLoadingIndicator();  // Показываем индикатор загрузки
 
             try {
-                console.log("Отправка сообщения:", message); // Лог отправляемого сообщения
-
                 const response = await fetch(chatConfig.url + chatConfig.chatEndpoint, {
                     method: 'POST',
                     headers: {
@@ -164,20 +104,18 @@
                     body: JSON.stringify({ message, thread_id }),
                 });
 
-                if (response.status === 429) {  // Если лимит превышен, запускаем капчу
+                if (response.status === 429) {
                     console.log("Превышен лимит запросов, запрашиваем капчу");
-                    await fetchCaptcha();
-                    hideLoadingIndicator();  // Убираем индикатор ожидания
+                    await fetchCaptcha();  // Запрос капчи при превышении лимита запросов
+                    hideLoadingIndicator();
                 } else {
                     const data = await response.json();
-                    console.log('Ответ сервера после отправки сообщения:', data); // Лог ответа сервера
-
-                    let assistantMessage = data.response.replace(/\【.*?\】/g, '');  // Убираем лишние символы
-                    hideLoadingIndicator();  // Убираем индикатор после получения ответа
+                    let assistantMessage = data.response.replace(/\\【.*?\\】/g, '');  // Убираем лишние символы
+                    hideLoadingIndicator();
                     appendMessage('assistant', assistantMessage);  // Ответ ассистента
                 }
             } catch (error) {
-                hideLoadingIndicator();  // Убираем индикатор при ошибке
+                hideLoadingIndicator();
                 appendMessage('assistant', 'Ошибка при отправке сообщения.');
                 console.error("Ошибка при отправке сообщения:", error);
             }
@@ -212,7 +150,7 @@
             }
         }
 
-        // Обработчик кнопки отправки сообщения
+        // Обработчик отправки сообщения
         document.getElementById('sendMessage').addEventListener('click', sendMessage);
 
         // Обработчик нажатия Enter для отправки сообщения
@@ -248,7 +186,7 @@
             right: 20px;
             width: 60px;
             height: 60px;
-            background-color: #007bff; /* Синий цвет для основной схемы */
+            background-color: #007bff;
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -262,7 +200,7 @@
         }
 
         .chat-icon:hover {
-            background-color: #0056b3; /* Темно-синий при наведении */
+            background-color: #0056b3;
         }
 
         .chat-box {
@@ -271,13 +209,13 @@
             right: 20px;
             width: 350px;
             height: 500px;
-            background-color: #ffffff; /* Белый фон чата */
+            background-color: #ffffff;
             border-radius: 10px;
             display: none;
             flex-direction: column;
             z-index: 9999;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-            font-family: Arial, sans-serif; /* Основной шрифт сайта */
+            font-family: Arial, sans-serif;
         }
 
         .chat-box.show {
@@ -285,7 +223,7 @@
         }
 
         .chat-header {
-            background-color: #007bff; /* Синий заголовок чата */
+            background-color: #007bff;
             color: white;
             padding: 15px;
             font-size: 18px;
@@ -299,7 +237,7 @@
             flex: 1;
             padding: 15px;
             overflow-y: auto;
-            background-color: #f5f5f5; /* Светлый фон сообщений */
+            background-color: #f5f5f5;
             color: black;
             font-size: 16px;
         }
@@ -307,7 +245,7 @@
         .chat-input-wrapper {
             display: flex;
             padding: 10px;
-            background-color: #fff; /* Белый фон ввода */
+            background-color: #fff;
             border-top: 1px solid #ddd;
             position: relative;
         }
@@ -328,10 +266,10 @@
 
         .chat-input-wrapper button {
             position: absolute;
-            right: 15px; /* Увеличиваем отступ справа */
+            right: 15px;
             top: 50%;
             transform: translateY(-50%);
-            background-color: #007bff; /* Синий цвет кнопки */
+            background-color: #007bff;
             border: none;
             border-radius: 50%;
             width: 36px;
@@ -353,13 +291,13 @@
             margin-bottom: 10px;
             padding: 12px;
             border-radius: 8px;
-            background-color: #e0e0e0; /* Светло-серый фон сообщений */
+            background-color: #e0e0e0;
             color: black;
             word-wrap: break-word;
         }
 
         .chat-message.user {
-            background-color: #007bff; /* Синий цвет сообщений пользователя */
+            background-color: #007bff;
             color: white;
             text-align: right;
         }
@@ -371,16 +309,16 @@
         }
 
         #loadingIndicator {
-            color: #007bff; /* Сделаем точки ярко-синими */
+            color: #007bff;
             font-style: italic;
             display: flex;
             align-items: center;
-            font-size: 24px; /* Увеличим размер точек */
+            font-size: 24px;
         }
 
         .loading-animation .dot {
             display: inline-block;
-            font-size: 24px; /* Увеличим размер точек */
+            font-size: 24px;
             margin-right: 2px;
             animation: blink 1s infinite;
         }
