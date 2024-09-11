@@ -1,17 +1,20 @@
 (function() {
     window.addEventListener('load', function() {
+        // Конфигурация чата, которую можно передать при подключении
         var chatConfig = window.chatConfig || {
-            url: 'https://default-url.com', // Замените на свой URL
+            url: 'https://default-url.com', // URL по умолчанию
             startEndpoint: '/start',
             chatEndpoint: '/chat',
-            widgetSrc: 'https://default-url.com/widget/chat-widget.js'
+            widgetSrc: 'https://default-url.com/widget/chat-widget.js' // Путь к виджету
         };
 
+        // Создание иконки чата
         const chatIcon = document.createElement('div');
         chatIcon.classList.add('chat-icon');
         chatIcon.innerHTML = '💬';
         document.body.appendChild(chatIcon);
 
+        // Создание окна чата
         const chatBox = document.createElement('div');
         chatBox.classList.add('chat-box');
         chatBox.innerHTML = `
@@ -24,10 +27,12 @@
         `;
         document.body.appendChild(chatBox);
 
+        // Открытие/закрытие чата
         chatIcon.addEventListener('click', function() {
             chatBox.classList.toggle('show');
         });
 
+        // Инициализация thread_id
         let thread_id = localStorage.getItem('thread_id');
 
         async function initThread() {
@@ -39,69 +44,69 @@
             }
         }
 
+        // Инициализация потока
         setTimeout(initThread, 500);
 
-        // Функция запроса капчи с сервера
-        async function fetchCaptcha() {
-            try {
-                const response = await fetch('/get-captcha');
-                const data = await response.json();
-                return data.question;
-            } catch (error) {
-                console.error("Ошибка при запросе капчи:", error);
-                return null;
+        // Добавление индикатора ожидания с анимацией
+        function showLoadingIndicator() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.id = 'loadingIndicator';
+            loadingIndicator.classList.add('chat-message', 'assistant', 'loading-animation');
+            loadingIndicator.innerHTML = `<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>`;
+            messagesDiv.appendChild(loadingIndicator);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Прокрутка вниз
+        }
+
+        // Удаление индикатора ожидания
+        function hideLoadingIndicator() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.remove();
             }
         }
 
-        // Функция для проверки ответа на капчу
-        async function verifyCaptcha(answer) {
-            try {
-                const response = await fetch('/check-captcha', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ answer: answer }),
-                });
-                const data = await response.json();
-                return data.success;
-            } catch (error) {
-                console.error("Ошибка при проверке капчи:", error);
-                return false;
+        // Отправка сообщения
+        document.getElementById('sendMessage').addEventListener('click', async function () {
+            sendMessage();
+        });
+
+        // Обработчик клавиши Enter для отправки сообщения
+        document.getElementById('userMessage').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Предотвращаем стандартное поведение Enter
+                sendMessage();
+            } else if (event.key === 'Enter' && event.shiftKey) {
+                event.preventDefault(); // Добавляем перевод строки
+                userMessage.value += '\n';
             }
-        }
+        });
 
-        // Проверка капчи при превышении лимита запросов
-        async function askCaptcha() {
-            const captchaQuestion = await fetchCaptcha();
-            if (captchaQuestion) {
-                const captchaAnswer = prompt(captchaQuestion); // Спрашиваем ответ на капчу
-                const isCorrect = await verifyCaptcha(captchaAnswer);
+        // Динамическое изменение высоты поля ввода
+        const userMessage = document.getElementById('userMessage');
+        const minHeight = 36; // Минимальная высота поля ввода (одна строка)
+        const maxHeight = 150; // Максимальная высота поля ввода
+        userMessage.style.height = `${minHeight}px`; // Устанавливаем начальную высоту
 
-                if (isCorrect) {
-                    alert("Капча пройдена!");
-                    return true;
-                } else {
-                    alert("Неправильный ответ. Попробуйте снова.");
-                    return false;
-                }
-            } else {
-                alert("Ошибка при загрузке капчи.");
-                return false;
+        userMessage.addEventListener('input', function() {
+            // Сброс высоты перед изменением для того, чтобы текстовое поле уменьшалось при удалении текста
+            userMessage.style.height = `${minHeight}px`;
+            const scrollHeight = userMessage.scrollHeight;
+
+            // Изменяем высоту поля ввода в зависимости от его содержимого
+            if (scrollHeight > minHeight) {
+                userMessage.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
             }
-        }
+        });
 
-        // Функция отправки сообщения с проверкой капчи при необходимости
+        // Функция отправки сообщения
         async function sendMessage() {
             const message = document.getElementById('userMessage').value.trim();
             if (message === '') return;
 
-            // Проверяем капчу перед отправкой сообщения
-            const captchaPassed = await askCaptcha();
-            if (!captchaPassed) return;
-
             appendMessage('user', message); // Добавление сообщения пользователя
             document.getElementById('userMessage').value = ''; // Очистка поля
+            userMessage.style.height = `${minHeight}px`; // Сброс высоты после отправки
 
             showLoadingIndicator(); // Показываем индикатор ожидания
 
@@ -115,11 +120,13 @@
                 });
                 const data = await response.json();
 
-                let assistantMessage = data.response.replace(/\【.*?\】/g, ''); // Убираем лишние символы
+                // Убираем ссылки в сообщении ИИ
+                let assistantMessage = data.response.replace(/\【.*?\】/g, '');
+
                 hideLoadingIndicator(); // Убираем индикатор после получения ответа
                 appendMessage('assistant', assistantMessage); // Ответ ассистента
             } catch (error) {
-                hideLoadingIndicator(); // Убираем индикатор при ошибке
+                hideLoadingIndicator(); // Убираем индикатор ожидания при ошибке
                 appendMessage('assistant', 'Ошибка при отправке сообщения.');
             }
         }
@@ -133,54 +140,6 @@
             messagesDiv.appendChild(newMessage);
             messagesDiv.scrollTop = messagesDiv.scrollHeight; // Прокрутка вниз
         }
-
-        // Индикатор ожидания
-        function showLoadingIndicator() {
-            const messagesDiv = document.getElementById('chatMessages');
-            const loadingIndicator = document.createElement('div');
-            loadingIndicator.id = 'loadingIndicator';
-            loadingIndicator.classList.add('chat-message', 'assistant', 'loading-animation');
-            loadingIndicator.innerHTML = `<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>`;
-            messagesDiv.appendChild(loadingIndicator);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        // Удаление индикатора ожидания
-        function hideLoadingIndicator() {
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            if (loadingIndicator) {
-                loadingIndicator.remove();
-            }
-        }
-
-        // Обработчик кнопки отправки сообщения
-        document.getElementById('sendMessage').addEventListener('click', sendMessage);
-
-        // Обработчик клавиши Enter для отправки сообщения
-        document.getElementById('userMessage').addEventListener('keydown', function(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            } else if (event.key === 'Enter' && event.shiftKey) {
-                event.preventDefault();
-                userMessage.value += '\n'; // Добавляем перенос строки
-            }
-        });
-
-        // Автоматическая настройка высоты поля ввода
-        const userMessage = document.getElementById('userMessage');
-        const minHeight = 36; // Минимальная высота поля ввода
-        const maxHeight = 150; // Максимальная высота поля ввода
-        userMessage.style.height = `${minHeight}px`;
-
-        userMessage.addEventListener('input', function() {
-            userMessage.style.height = `${minHeight}px`; // Сброс высоты перед изменением
-            const scrollHeight = userMessage.scrollHeight;
-
-            if (scrollHeight > minHeight) {
-                userMessage.style.height = `${Math.min(scrollHeight, maxHeight)}px`; // Изменение высоты поля ввода
-            }
-        });
     });
 
     // Стили для чата, адаптированные под бело-синий дизайн
