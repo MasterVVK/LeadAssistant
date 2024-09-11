@@ -73,7 +73,7 @@
                     isCaptchaRequired = false; // Сбрасываем флаг капчи
                     appendMessage('assistant', 'Капча успешно пройдена!');
                     if (savedMessage !== '') {
-                        sendSavedMessage(); // Отправляем сообщение, введенное до капчи
+                        await sendSavedMessage(); // Отправляем сообщение, введенное до капчи
                     }
                 } else {
                     appendMessage('assistant', 'Неправильный ответ. Попробуйте снова.');
@@ -209,6 +209,7 @@
             }
         });
     });
+
 
     // Стили для чата, адаптированные под бело-синий дизайн
     const style = document.createElement('style');
