@@ -10,6 +10,7 @@
         let isCaptchaRequired = false; // Флаг для определения, требуется ли ввод капчи
         let captchaQuestion = ''; // Вопрос капчи
         let savedMessage = ''; // Сохраненное сообщение перед капчей
+        let isSendingMessage = false; // Флаг для блокировки отправки сообщений
 
         const chatIcon = document.createElement('div');
         chatIcon.classList.add('chat-icon');
@@ -91,6 +92,7 @@
         // Отправка сообщения после успешного прохождения капчи
         async function sendMessageAfterCaptcha(message) {
             appendMessage('user', message); // Добавляем сообщение пользователя
+            blockInput(); // Блокируем ввод сообщения
 
             showLoadingIndicator(); // Показываем индикатор ожидания
 
@@ -116,12 +118,18 @@
                 hideLoadingIndicator(); // Убираем индикатор при ошибке
                 appendMessage('assistant', 'Ошибка при отправке сообщения.');
             }
+
+            unblockInput(); // Разблокируем ввод сообщения
         }
 
         // Основная функция отправки сообщения
         async function sendMessage() {
+            if (isSendingMessage) return; // Проверяем, отправляется ли уже сообщение
             const message = document.getElementById('userMessage').value.trim();
             if (message === '') return;
+
+            // Блокируем ввод при отправке сообщения
+            blockInput();
 
             // Проверяем, если активна капча, проверяем введенный ответ
             if (isCaptchaRequired) {
@@ -133,6 +141,8 @@
                     await sendMessageAfterCaptcha(savedMessage);
                     savedMessage = ''; // Очищаем сохраненное сообщение
                 }
+
+                unblockInput(); // Разблокируем ввод после капчи
                 return;
             }
 
@@ -165,6 +175,22 @@
                 hideLoadingIndicator(); // Убираем индикатор при ошибке
                 appendMessage('assistant', 'Ошибка при отправке сообщения.');
             }
+
+            unblockInput(); // Разблокируем ввод после отправки
+        }
+
+        // Функция блокировки ввода сообщения
+        function blockInput() {
+            isSendingMessage = true;
+            document.getElementById('userMessage').disabled = true;
+            document.getElementById('sendMessage').disabled = true;
+        }
+
+        // Функция разблокировки ввода сообщения
+        function unblockInput() {
+            isSendingMessage = false;
+            document.getElementById('userMessage').disabled = false;
+            document.getElementById('sendMessage').disabled = false;
         }
 
         // Функция добавления сообщений в чат
