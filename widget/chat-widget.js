@@ -53,7 +53,7 @@
                 const data = await response.json();
                 captchaQuestion = data.question;
                 isCaptchaRequired = true; // Устанавливаем флаг для капчи
-                appendMessage('assistant', `Капча: ${captchaQuestion}`); // Отображаем вопрос капчи в чате
+                appendMessage('assistant', `Введите результат выражения: ${captchaQuestion}`); // Отображаем вопрос капчи в чате
             } catch (error) {
                 console.error("Ошибка при запросе капчи:", error);
             }
@@ -72,7 +72,7 @@
                 const data = await response.json();
                 if (data.success) {
                     isCaptchaRequired = false; // Сбрасываем флаг капчи
-                    appendMessage('assistant', 'Капча успешно пройдена!');
+                    appendMessage('assistant', 'Проверка пройдена, продолжаем!');
 
                     // Автоматическая отправка сохраненного сообщения
                     if (savedMessage) {
@@ -110,7 +110,7 @@
                     hideLoadingIndicator(); // Убираем индикатор ожидания
                 } else {
                     const data = await response.json();
-                    let assistantMessage = data.response.replace(/\\【.*?\\】/g, ''); // Убираем лишние символы
+                    let assistantMessage = data.response.replace(/\【.*?\】/g, ''); // Убираем лишние символы
                     hideLoadingIndicator(); // Убираем индикатор после получения ответа
                     appendMessage('assistant', assistantMessage); // Ответ ассистента
                 }
@@ -172,7 +172,7 @@
                     hideLoadingIndicator(); // Убираем индикатор ожидания
                 } else {
                     const data = await response.json();
-                    let assistantMessage = data.response.replace(/\\【.*?\\】/g, ''); // Убираем лишние символы
+                    let assistantMessage = data.response.replace(/\【.*?\】/g, ''); // Убираем лишние символы
                     hideLoadingIndicator(); // Убираем индикатор после получения ответа
                     appendMessage('assistant', assistantMessage); // Ответ ассистента
                 }
