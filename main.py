@@ -74,8 +74,11 @@ def index():
     with open('knowledge.json', 'r', encoding='utf-8') as knowledge_file:
         knowledge_data = json.load(knowledge_file)
 
+    # Чтение и преобразование содержимого prompts.py
     with open('prompts.py', 'r', encoding='utf-8') as prompts_file:
         prompts_data = prompts_file.read()
+        # Убираем "assistant_instructions = """ в начале и """ в конце
+        prompts_data = prompts_data.replace('assistant_instructions = """', '').strip().rstrip('"""')
         prompts_html = markdown2.markdown(prompts_data)  # Преобразование Markdown в HTML
 
     return render_template('index.html', knowledge=knowledge_data, prompts=prompts_html)
