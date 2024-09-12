@@ -2,13 +2,17 @@ import json
 import os
 import time
 import random
-import openai  # Необходимо для работы с OpenAI API
-import markdown2  # Импортируем библиотеку для преобразования Markdown в HTML
-from flask import Flask, jsonify, request, session, redirect, url_for, render_template  # Необходимо для рендеринга шаблонов
+import logging  # Добавляем библиотеку для логирования
+import openai
+import markdown2
+from flask import Flask, jsonify, request, session, redirect, url_for, render_template
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from openai import OpenAI
 import functions
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
 
 OPENAI_API_KEY = os.environ['OPENAI_API_KEY']
 
@@ -24,7 +28,7 @@ else:
     print("OpenAI version is compatible.")
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Секретный ключ для сессий
+app.secret_key = 'your_secret_key'
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -83,12 +87,12 @@ def index():
 
     return render_template('index.html', knowledge=knowledge_data, prompts=prompts_html)
 
-
 # Стартовый маршрут
 @app.route('/start', methods=['GET'])
 @limiter.limit("2 per minute")  # Ограничение на 2 запроса в минуту
 def start_conversation():
     thread = client.beta.threads.create()
+    logging.info(f"Создан новый поток. Thread ID: {thread.id}")  # Логируем создание потока
     return jsonify({"thread_id": thread.id})
 
 # Маршрут для отправки сообщений с проверкой на превышение лимита
@@ -100,7 +104,10 @@ def chat():
     user_input = data.get('message', '')
 
     if not thread_id:
+        logging.error("Отсутствует thread_id в запросе")  # Логируем ошибку
         return jsonify({"error": "Missing thread_id"}), 400
+
+    logging.info(f"Получено сообщение: '{user_input}' с Thread ID: {thread_id}")  # Логируем сообщение пользователя
 
     # Если лимит превышен, перенаправляем на капчу
     if request.endpoint == 'limiter.exceeded':
@@ -127,6 +134,8 @@ def chat():
 
     messages = client.beta.threads.messages.list(thread_id=thread_id)
     response = messages.data[0].content[0].text.value
+
+    logging.info(f"Отправлен ответ ассистента: '{response}' с Thread ID: {thread_id}")  # Логируем ответ ассистента
 
     return jsonify({"response": response})
 
