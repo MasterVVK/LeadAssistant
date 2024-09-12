@@ -4,11 +4,11 @@ import os
 from openai import OpenAI
 from prompts import assistant_instructions
 
-
 OPENAI_API_KEY = os.environ['OPENAI_API_KEY']
 
 # Инициализация клиента OpenAI
 client = OpenAI(api_key=OPENAI_API_KEY)
+
 
 # Отправка данных о потенциальном клиенте в Make
 def create_lead(name, phone, date, service):
@@ -21,7 +21,6 @@ def create_lead(name, phone, date, service):
     }
     response = requests.post(url, json=data)
     try:
-        # Проверяем, есть ли содержимое в ответе перед попыткой его разобрать как JSON
         if response.content:
             return response.json()
         else:
@@ -31,7 +30,18 @@ def create_lead(name, phone, date, service):
         print(f"Failed to parse JSON from response: {response.text}")
         return {}
 
-# Создать или загрузить ассистента
+
+# Загрузка файла с функциями времени для ассистента
+def upload_time_functions_file():
+    with open('assistant_time_functions_updated.py', 'rb') as f:
+        response = client.files.create(
+            file=f,
+            purpose='assistants'  # Указываем правильное назначение файла
+        )
+        return response.id  # Доступ через атрибут
+
+
+# Создать или загрузить ассистента с включением Code Interpreter
 def create_assistant(client):
     assistant_file_path = 'assistant.json'
 
@@ -43,16 +53,20 @@ def create_assistant(client):
             print("Loaded existing assistant ID.")
     else:
         # Если файла assistant.json нет, создать нового ассистента с использованием указанных ниже спецификаций
-        
+
+        # Шаг 1: Загрузка файла с функциями времени
+        file_id = upload_time_functions_file()
+
+        # Шаг 2: Создаем ассистента с Code Interpreter, file_search и функцией захвата лидов
         assistant = client.beta.assistants.create(
             instructions=assistant_instructions,
             model="gpt-4o",
             tools=[
                 {
-                    "type": "file_search"  # Это добавляет базу знаний в качестве инструмента
+                    "type": "file_search"  # Инструмент для базы знаний
                 },
                 {
-                    "type": "function",  # Это добавляет функцию захвата лидов в качестве инструмента
+                    "type": "function",  # Инструмент для захвата лидов
                     "function": {
                         "name": "create_lead",
                         "description": "Capture lead details and save to Make.",
@@ -79,9 +93,19 @@ def create_assistant(client):
                             "required": ["name", "phone", "date", "service"]
                         }
                     }
+                },
+                {
+                    "type": "code_interpreter"  # Инструмент Code Interpreter
                 }
-            ]
-            )
+            ],
+            tool_resources={
+                "code_interpreter": {
+                    "file_ids": [file_id]  # Привязываем загруженный файл
+                }
+            }
+        )
+
+        # Создание и загрузка файлов для базы знаний
         vector_store = client.beta.vector_stores.create(name="knowledge")
 
         file_paths = ["knowledge.json"]
@@ -89,17 +113,17 @@ def create_assistant(client):
 
         file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
             vector_store_id=vector_store.id, files=file_streams
-            )
+        )
 
         print(file_batch.status)
         print(file_batch.file_counts)
 
         assistant = client.beta.assistants.update(
-        assistant_id=assistant.id,
-        tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
+            assistant_id=assistant.id,
+            tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
         )
 
-        # Создать новый файл assistant.json для загрузки в будущем. 
+        # Сохранение ID ассистента для будущего использования
         with open(assistant_file_path, 'w') as file:
             json.dump({'assistant_id': assistant.id}, file)
             print("Created a new assistant and saved the ID.")
