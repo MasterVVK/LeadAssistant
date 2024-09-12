@@ -36,15 +36,19 @@
         let thread_id = localStorage.getItem('thread_id');
 
         async function initThread() {
-            if (!thread_id) {
-                const response = await fetch(chatConfig.url + chatConfig.startEndpoint);
-                const data = await response.json();
-                thread_id = data.thread_id;
-                localStorage.setItem('thread_id', thread_id);
+            try {
+                if (!thread_id) {
+                    const response = await fetch(chatConfig.url + chatConfig.startEndpoint);
+                    const data = await response.json();
+                    thread_id = data.thread_id;
+                    localStorage.setItem('thread_id', thread_id);
+                }
+            } catch (error) {
+                console.error("Ошибка при инициализации чата:", error);
             }
         }
 
-        setTimeout(initThread, 500);
+        setTimeout(initThread, 500); // Инициализация через 500 мс
 
         // Функция запроса капчи с сервера
         async function fetchCaptcha() {
@@ -96,13 +100,18 @@
 
             showLoadingIndicator(); // Показываем индикатор ожидания
 
+            // Проверка и переинициализация thread_id, если его нет
+            if (!thread_id) {
+                await initThread();
+            }
+
             try {
                 const response = await fetch(chatConfig.url + chatConfig.chatEndpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ message, thread_id }),
+                    body: JSON.stringify({ message, thread_id }),  // Передача thread_id
                 });
 
                 if (response.status === 429) { // Если лимит превышен, запускаем капчу
@@ -129,15 +138,13 @@
             const message = document.getElementById('userMessage').value.trim();
             if (message === '') return;
 
-            // Блокируем ввод при отправке сообщения
-            blockInput();
+            blockInput(); // Блокируем ввод при отправке сообщения
 
             // Проверяем, если активна капча, проверяем введенный ответ
             if (isCaptchaRequired) {
                 const captchaPassed = await verifyCaptcha(message);
                 document.getElementById('userMessage').value = ''; // Очищаем поле
 
-                // Если капча пройдена, отправляем сохраненное сообщение
                 if (captchaPassed && savedMessage) {
                     await sendMessageAfterCaptcha(savedMessage);
                     savedMessage = ''; // Очищаем сохраненное сообщение
@@ -148,14 +155,17 @@
                 return;
             }
 
-            // Если капча не требуется, отправляем сообщение
             appendMessage('user', message); // Добавляем сообщение пользователя
             document.getElementById('userMessage').value = ''; // Очистка поля
 
-            // Убираем placeholder после первого отправленного сообщения
-            document.getElementById('userMessage').removeAttribute('placeholder');
+            document.getElementById('userMessage').removeAttribute('placeholder'); // Убираем placeholder
 
             showLoadingIndicator(); // Показываем индикатор ожидания
+
+            // Проверка и переинициализация thread_id, если его нет
+            if (!thread_id) {
+                await initThread();
+            }
 
             try {
                 const response = await fetch(chatConfig.url + chatConfig.chatEndpoint, {
@@ -163,7 +173,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ message, thread_id }),
+                    body: JSON.stringify({ message, thread_id }),  // Передача thread_id
                 });
 
                 if (response.status === 429) { // Если лимит превышен, запускаем капчу
