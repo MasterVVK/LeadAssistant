@@ -3,6 +3,7 @@ import os
 import time
 import random
 import openai  # Необходимо для работы с OpenAI API
+import markdown2  # Импортируем библиотеку для преобразования Markdown в HTML
 from flask import Flask, jsonify, request, session, redirect, url_for, render_template  # Необходимо для рендеринга шаблонов
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -75,8 +76,10 @@ def index():
 
     with open('prompts.py', 'r', encoding='utf-8') as prompts_file:
         prompts_data = prompts_file.read()
+        prompts_html = markdown2.markdown(prompts_data)  # Преобразование Markdown в HTML
 
-    return render_template('index.html', knowledge=knowledge_data, prompts=prompts_data)
+    return render_template('index.html', knowledge=knowledge_data, prompts=prompts_html)
+
 
 # Стартовый маршрут
 @app.route('/start', methods=['GET'])
