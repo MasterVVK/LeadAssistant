@@ -33,7 +33,13 @@ def create_lead(name, phone, date, service):
 
 # Загрузка файла с функциями времени для ассистента
 def upload_time_functions_file():
-    with open('assistant_time_functions_updated.py', 'rb') as f:
+    file_path = 'assistant_time_functions_updated.py'
+
+    if not os.path.exists(file_path):
+        print(f"Файл {file_path} не найден. Продолжаем без него.")
+        return None
+
+    with open(file_path, 'rb') as f:
         response = client.files.create(
             file=f,
             purpose='assistants'  # Указываем правильное назначение файла
@@ -52,8 +58,6 @@ def create_assistant(client):
             assistant_id = assistant_data['assistant_id']
             print("Loaded existing assistant ID.")
     else:
-        # Если файла assistant.json нет, создать нового ассистента с использованием указанных ниже спецификаций
-
         # Шаг 1: Загрузка файла с функциями времени
         file_id = upload_time_functions_file()
 
@@ -95,12 +99,12 @@ def create_assistant(client):
                     }
                 },
                 {
-                    "type": "code_interpreter"  # Инструмент Code Interpreter
+                    "type": "code_interpreter"  # Включаем Code Interpreter
                 }
             ],
             tool_resources={
                 "code_interpreter": {
-                    "file_ids": [file_id]  # Привязываем загруженный файл
+                    "file_ids": [file_id] if file_id else []  # Привязываем загруженный файл, если он существует
                 }
             }
         )
@@ -123,7 +127,7 @@ def create_assistant(client):
             tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
         )
 
-        # Сохранение ID ассистента для будущего использования
+        # Сохраняем ID ассистента для будущего использования
         with open(assistant_file_path, 'w') as file:
             json.dump({'assistant_id': assistant.id}, file)
             print("Created a new assistant and saved the ID.")
