@@ -2,7 +2,7 @@ import json
 import os
 import time
 import random
-import logging  # Добавляем библиотеку для логирования
+import logging  # Добавляем библиотеку для логирования 2
 import openai
 import markdown2
 from flask import Flask, jsonify, request, session, redirect, url_for, render_template
